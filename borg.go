@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/urfave/cli"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -92,6 +93,7 @@ func doQuery(c *cli.Context, streaming bool) error {
 	if streaming {
 		srcFileName := c.String("source")
 		batchSize := c.Int("batch")
+		faultTolerant := c.Bool("fault-tolerant")
 
 		// Opening file
 		file, e := os.Open(srcFileName)
@@ -135,18 +137,42 @@ func doQuery(c *cli.Context, streaming bool) error {
 			bar.Set(linesRead)
 			if len(pending) >= batchSize {
 				queryVariables["data"] = pending
-				_, e := GraqhQLRequest(serverURL, body, queryVariables)
-				if e != nil {
-					return e
+				if faultTolerant {
+					for {
+						_, e := GraqhQLRequest(serverURL, body, queryVariables)
+						if e != nil {
+							fmt.Println(e)
+							time.Sleep(1000)
+						} else {
+							break
+						}
+					}
+				} else {
+					_, e := GraqhQLRequest(serverURL, body, queryVariables)
+					if e != nil {
+						return e
+					}
 				}
 				pending = make([]interface{}, 0)
 			}
 		}
 		if len(pending) >= batchSize {
 			queryVariables["data"] = pending
-			_, e := GraqhQLRequest(serverURL, body, queryVariables)
-			if e != nil {
-				return e
+			if faultTolerant {
+				for {
+					_, e := GraqhQLRequest(serverURL, body, queryVariables)
+					if e != nil {
+						fmt.Println(e)
+						time.Sleep(1000)
+					} else {
+						break
+					}
+				}
+			} else {
+				_, e := GraqhQLRequest(serverURL, body, queryVariables)
+				if e != nil {
+					return e
+				}
 			}
 		}
 		bar.FinishPrint("Importing completed")
@@ -237,6 +263,10 @@ func main() {
 					Name:  "batch",
 					Value: 50,
 					Usage: "Batch size",
+				},
+				cli.BoolFlag{
+					Name:  "fault-tolerant",
+					Usage: "Set this flag to repeat on errors",
 				},
 			},
 			Action: func(c *cli.Context) error {
