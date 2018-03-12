@@ -40,6 +40,6 @@ func main() {
 		fmt.Println(emoji.Sprintf(":warning: Failed in %d s", endTime.Sub(startTime)/time.Second))
 		log.Fatal(err)
 	} else {
-		fmt.Println(emoji.Sprintf(":beer: Failed in %d s", endTime.Sub(startTime)/time.Second))
+		fmt.Println(emoji.Sprintf(":beer: Completed in %d s", endTime.Sub(startTime)/time.Second))
 	}
 }
