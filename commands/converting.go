@@ -9,11 +9,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
+	"github.com/buger/jsonparser"
 	"github.com/statecrafthq/borg/commands/formats"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/twpayne/go-geom/encoding/geojson"
 	"github.com/urfave/cli"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func convertShapefile(c *cli.Context) error {
@@ -69,12 +72,22 @@ func convertShapefile(c *cli.Context) error {
 func converGeoJson(c *cli.Context) error {
 	src := c.String("src")
 	dst := c.String("dst")
+	formatID := c.String("format")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
 	}
 	if dst == "" {
 		return cli.NewExitError("Destination file is not provided", 1)
 	}
+	if formatID == "" {
+		return cli.NewExitError("Format is not provided", 1)
+	}
+
+	allFormats := formats.Formats()
+	if _, ok := allFormats[strings.ToLower(formatID)]; !ok {
+		return cli.NewExitError("Unable to find required format", 1)
+	}
+	format := allFormats[strings.ToLower(formatID)]
 
 	//
 	// Existing file
@@ -100,11 +113,12 @@ func converGeoJson(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	geometry := &geojson.FeatureCollection{}
-	err = json.Unmarshal(body, &geometry)
-	if err != nil {
-		return err
-	}
+
+	// geometry := &geojson.FeatureCollection{}
+	// err = json.Unmarshal(body, &geometry)
+	// if err != nil {
+	// 	return err
+	// }
 
 	//
 	// Generating of JSVC
@@ -117,18 +131,41 @@ func converGeoJson(c *cli.Context) error {
 	defer file.Close()
 	w := bufio.NewWriter(file)
 
-	for _, element := range geometry.Features {
+	//
+	// Iterating each feature
+	//
+	bar := pb.StartNew(len(body))
+	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		defer func() {
+			// recover from panic if one occured. Set err to nil otherwise.
+			if err := recover(); err != nil {
+				// 	err = errors.New("array index out of bounds")
+				fmt.Println("Error in record:")
+				fmt.Println(string(value))
+			}
+		}()
+
+		bar.Set(offset)
+
+		// jsonparser.Get(body, "geometry")
+
+		// TODO: Handle errors!
+		feature := &geojson.Feature{}
+		err = json.Unmarshal(value, &feature)
+		if err != nil {
+			log.Panic(err)
+		}
 
 		// Parsing IDs
-		idValue, err := formats.NewYorkId(element)
+		idValue, err := format.ID(feature)
 		if err != nil {
-			continue
+			log.Panic(err)
 		}
 
 		// Parsing Coordinates
-		coordinates, err := utils.ConvertGeometry(element.Geometry)
+		coordinates, err := utils.ConvertGeometry(feature.Geometry)
 		if err != nil {
-			return err
+			log.Panic(err)
 		}
 
 		// Preparing Bundle
@@ -139,10 +176,15 @@ func converGeoJson(c *cli.Context) error {
 		// Writing
 		marshaled, err := json.Marshal(fields)
 		if err != nil {
-			return err
+			log.Panic(err)
 		}
 		fmt.Fprintln(w, string(marshaled))
+	}, "features")
+
+	if err != nil {
+		return err
 	}
+
 	return w.Flush()
 }
 
