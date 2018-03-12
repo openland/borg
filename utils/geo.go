@@ -33,12 +33,12 @@ func convertCoordArray3(coords [][][]geom.Coord) [][][][]float64 {
 	return res
 }
 
-func ConvertGeometry(g geom.T) ([][][][]float64, error) {
+func ConvertGeometry(g geom.T) ([][][]float64, error) {
 	switch g := g.(type) {
 	case *geom.Polygon:
-		return [][][][]float64{convertCoordArray2(g.Coords())}, nil
+		return convertCoordArray2(g.Coords()), nil
 	case *geom.MultiPolygon:
-		return convertCoordArray3(g.Coords()), nil
+		return convertCoordArray3(g.Coords())[0], nil
 	default:
 		return nil, errors.New("Unsupported poing type")
 	}

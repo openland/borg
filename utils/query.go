@@ -10,7 +10,7 @@ import (
 
 type graphQLResponse struct {
 	Data   *interface{}  `json:"data"`
-	Errors []interface{} `json:"error"`
+	Errors []interface{} `json:"errors"`
 }
 
 func GraqhQLRequest(endpoint string, body string, args map[string]interface{}) (string, error) {

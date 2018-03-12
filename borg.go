@@ -36,8 +36,10 @@ func main() {
 	startTime := time.Now()
 	err := app.Run(os.Args)
 	endTime := time.Now()
-	fmt.Println(emoji.Sprintf(":beer: Completed in %d s", endTime.Sub(startTime)/time.Second))
 	if err != nil {
+		fmt.Println(emoji.Sprintf(":warning: Failed in %d s", endTime.Sub(startTime)/time.Second))
 		log.Fatal(err)
+	} else {
+		fmt.Println(emoji.Sprintf(":beer: Failed in %d s", endTime.Sub(startTime)/time.Second))
 	}
 }
