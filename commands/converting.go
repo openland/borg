@@ -2,21 +2,16 @@ package commands
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
 
-	"github.com/buger/jsonparser"
 	"github.com/statecrafthq/borg/commands/formats"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/twpayne/go-geom/encoding/geojson"
 	"github.com/urfave/cli"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func convertShapefile(c *cli.Context) error {
@@ -46,33 +41,17 @@ func convertShapefile(c *cli.Context) error {
 	}
 
 	//
-	// Check if file in path
-	//
-
-	_, e := exec.LookPath("ogr2ogr")
-	if e != nil {
-		return e
-	}
-
-	//
 	// Starting conversion
 	//
 
-	command := exec.Command("ogr2ogr", "-f", "GeoJSON", "-t_srs", "crs:84", dst, src)
-	var out bytes.Buffer
-	command.Stdout = &out
-	err := command.Run()
-	if err != nil {
-		fmt.Printf("Execution failed: \n%s\n", out.String())
-		log.Fatal(err)
-	}
-	return nil
+	return utils.ShapefileToGeoJson(src, dst)
 }
 
 func converGeoJson(c *cli.Context) error {
 	src := c.String("src")
 	dst := c.String("dst")
 	formatID := c.String("format")
+	strict := c.Bool("strict")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
 	}
@@ -114,12 +93,6 @@ func converGeoJson(c *cli.Context) error {
 		return err
 	}
 
-	// geometry := &geojson.FeatureCollection{}
-	// err = json.Unmarshal(body, &geometry)
-	// if err != nil {
-	// 	return err
-	// }
-
 	//
 	// Generating of JSVC
 	//
@@ -134,38 +107,29 @@ func converGeoJson(c *cli.Context) error {
 	//
 	// Iterating each feature
 	//
-	bar := pb.StartNew(len(body))
-	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		defer func() {
-			// recover from panic if one occured. Set err to nil otherwise.
-			if err := recover(); err != nil {
-				// 	err = errors.New("array index out of bounds")
-				fmt.Println("Error in record:")
-				fmt.Println(string(value))
-			}
-		}()
-
-		bar.Set(offset)
-
-		// jsonparser.Get(body, "geometry")
-
-		// TODO: Handle errors!
-		feature := &geojson.Feature{}
-		err = json.Unmarshal(value, &feature)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		// Parsing IDs
+	err = utils.IterateFeatures(body, strict, func(feature *geojson.Feature) error {
 		idValue, err := format.ID(feature)
 		if err != nil {
-			log.Panic(err)
+			return err
 		}
 
 		// Parsing Coordinates
-		coordinates, err := utils.ConvertGeometry(feature.Geometry)
+		coordinates, err := utils.SerializeGeometry(feature.Geometry)
 		if err != nil {
-			log.Panic(err)
+			return err
+		}
+
+		// Fixing invalid polygons
+		err = utils.ValidateGeometry(coordinates)
+		if err != nil {
+			coordinates, err = utils.PolygonRepair(coordinates)
+			if err != nil {
+				return err
+			}
+			err = utils.ValidateGeometry(coordinates)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Preparing Bundle
@@ -176,11 +140,12 @@ func converGeoJson(c *cli.Context) error {
 		// Writing
 		marshaled, err := json.Marshal(fields)
 		if err != nil {
-			log.Panic(err)
+			return nil
 		}
 		fmt.Fprintln(w, string(marshaled))
-	}, "features")
 
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -234,6 +199,10 @@ func CreateConvertingCommands() []cli.Command {
 						cli.BoolFlag{
 							Name:  "force, f",
 							Usage: "Overwrite file if exists",
+						},
+						cli.BoolFlag{
+							Name:  "strict",
+							Usage: "Crash on invalid record",
 						},
 					},
 					Action: func(c *cli.Context) error {

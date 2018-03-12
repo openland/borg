@@ -10,3 +10,25 @@ func FileExists(name string) bool {
 	}
 	return true
 }
+
+func PrepareTemp() error {
+	err := ClearTemp()
+	if err != nil {
+		return err
+	}
+	err = os.Mkdir("tmp", os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ClearTemp() error {
+	if FileExists("tmp") {
+		err := os.Remove("tmp")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
