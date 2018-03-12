@@ -117,6 +117,7 @@ func IterateFeatures(data []byte, strict bool, cb func(feature *geojson.Feature)
 				// 	err = errors.New("array index out of bounds")
 				fmt.Println("Error in record:")
 				fmt.Println(string(value))
+				fmt.Println(err)
 			}
 		}()
 		bar.Set(offset)

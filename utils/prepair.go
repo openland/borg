@@ -62,24 +62,25 @@ func convertToWkt(src [][][][]float64) string {
 	return res + ")"
 }
 
-func splitBrackets(src string) []string {
-	opened := 1
+func splitBrackets(src string) ([]string, error) {
+	opened := 0
 	start := 0
 	w := strings.Trim(src, " ")
 	res := make([]string, 0)
 	for i, r := range w {
-		if i <= start {
-			continue
-		}
 		c := string(r)
 		if c == "(" {
+			// First symbol after start
+			if opened == 0 {
+				start = i + 1
+			}
 			opened = opened + 1
 		} else if c == ")" {
 			opened = opened - 1
 			if opened < 0 {
-				// Handle error!
+				return nil, errors.New("wrong bracket sequence")
 			} else if opened == 0 {
-				res = append(res, strings.Trim(w[start+1:i], " "))
+				res = append(res, strings.Trim(w[start:i], " "))
 				start = i + 2 // There should be comma between
 			}
 		}
@@ -87,7 +88,7 @@ func splitBrackets(src string) []string {
 	if start < len(w) {
 		res = append(res, strings.Trim(w[start+1:len(w)-1], " "))
 	}
-	return res
+	return res, nil
 }
 
 func parseWkt(src string) ([][][][]float64, error) {
@@ -96,10 +97,21 @@ func parseWkt(src string) ([][][][]float64, error) {
 	}
 	w := strings.TrimPrefix(src, "MULTIPOLYGON")
 	res := make([][][][]float64, 0)
-	body := splitBrackets(w)[0]
-	for _, poly := range splitBrackets(body) {
+	body, err := splitBrackets(w)
+	if err != nil {
+		return nil, err
+	}
+	polys, err := splitBrackets(body[0])
+	if err != nil {
+		return nil, err
+	}
+	for _, poly := range polys {
 		polyParsed := make([][][]float64, 0)
-		for _, circle := range splitBrackets(poly) {
+		circles, err := splitBrackets(poly)
+		if err != nil {
+			return nil, err
+		}
+		for _, circle := range circles {
 			circleParsed := make([][]float64, 0)
 			for _, point := range strings.Split(circle, ",") {
 				pointSplited := strings.Split(strings.Trim(point, " "), " ")
