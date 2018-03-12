@@ -135,7 +135,6 @@ func converGeoJson(c *cli.Context) error {
 		fields := make(map[string]interface{})
 		fields["id"] = idValue
 		fields["geometry"] = coordinates
-		log.Printf(idValue)
 
 		// Writing
 		marshaled, err := json.Marshal(fields)
