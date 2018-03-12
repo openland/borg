@@ -189,6 +189,10 @@ func CreateConvertingCommands() []cli.Command {
 							Name:  "format",
 							Usage: "ny_blocks, ny_parcels, sf_blocks, sf_parcels",
 						},
+						cli.BoolFlag{
+							Name:  "force, f",
+							Usage: "Overwrite file if exists",
+						},
 					},
 					Action: func(c *cli.Context) error {
 						return converGeoJson(c)
