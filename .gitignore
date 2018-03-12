@@ -1,0 +1,9 @@
+*.geojson
+*.jsvc
+*.xml
+*.shx
+*.dbf
+debug
+*.prj
+*.shp
+*.graphql
