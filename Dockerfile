@@ -56,4 +56,4 @@ RUN go get \
 # Building Go
 RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go build && mv borg /usr/bin/
 
-CMD "/usr/bin/borg"
+ENTRYPOINT ["/usr/bin/borg"]
