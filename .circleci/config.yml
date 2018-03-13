@@ -18,7 +18,7 @@ jobs:
           destination: borg
       - persist_to_workspace:
           root: /go/src/github.com/statecrafthq/borg/
-           paths:
+          paths:
             - './borg'
             - './Dockerfile'
   docker:
