@@ -27,7 +27,7 @@ func main() {
 	// Commands
 	//
 
-	app.Commands = append(commands.CreateImportingCommands(), commands.CreateConvertingCommands()...)
+	app.Commands = append(append(commands.CreateImportingCommands(), commands.CreateConvertingCommands()...), commands.CreateSyncCommands()...)
 
 	//
 	// Starting

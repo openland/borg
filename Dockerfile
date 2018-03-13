@@ -50,7 +50,8 @@ RUN go get \
     github.com/urfave/cli \
     github.com/twpayne/go-geom \
     github.com/buger/jsonparser \
-    gopkg.in/cheggaaa/pb.v1
+    gopkg.in/cheggaaa/pb.v1 \
+    cloud.google.com/go/storage
 
 # Building Go
 RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go build && mv borg /usr/bin/

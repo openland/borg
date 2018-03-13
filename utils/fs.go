@@ -1,6 +1,11 @@
 package utils
 
-import "os"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
+	"os"
+)
 
 func FileExists(name string) bool {
 	if _, e := os.Stat(name); e != nil {
@@ -31,4 +36,21 @@ func ClearTemp() error {
 		}
 	}
 	return nil
+}
+
+func SHA256File(filePath string) (result string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	_, err = io.Copy(hash, file)
+	if err != nil {
+		return
+	}
+
+	result = hex.EncodeToString(hash.Sum(nil))
+	return
 }
