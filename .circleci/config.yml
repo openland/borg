@@ -1,41 +1,10 @@
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/golang:1.10
-    working_directory: /go/src/github.com/statecrafthq/borg
-    steps:
-      - checkout
-      - run: go get gopkg.in/kyokomi/emoji.v1
-      - run: go get github.com/urfave/cli
-      - run: go get github.com/twpayne/go-geom
-      - run: go get github.com/buger/jsonparser
-      - run: go get gopkg.in/cheggaaa/pb.v1
-      - run: go get github.com/cheggaaa/pb
-      - run: go build
-      - store_artifacts:
-          path: /go/src/github.com/statecrafthq/borg/borg
-          destination: borg
-      - persist_to_workspace:
-          root: /go/src/github.com/statecrafthq/borg/
-          paths:
-            - './borg'
-            - './Dockerfile'
   docker:
     machine: true
+    working_directory: /dist
     steps:
-      - attach_workspace:
-          at: ./dist
+      - checkout
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - run: docker build -t statecraft/borg:v${CIRCLE_BUILD_NUM} ./dist/.
       - run: docker push statecraft/borg:v${CIRCLE_BUILD_NUM}
-
-
-workflows:
-  version: 2
-  build:
-    jobs:
-      - build
-      - docker:
-          requires:
-            - build
