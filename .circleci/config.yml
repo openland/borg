@@ -26,4 +26,5 @@ jobs:
       - run: go get github.com/twpayne/go-geom
       - run: go get github.com/buger/jsonparser
       - run: go get gopkg.in/cheggaaa/pb.v1
+      - run: go get github.com/cheggaaa/pb
       - run: go build

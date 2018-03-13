@@ -7,9 +7,9 @@ import (
 	"log"
 
 	"github.com/buger/jsonparser"
-	"github.com/cheggaaa/pb"
 	"github.com/twpayne/go-geom"
 	"github.com/twpayne/go-geom/encoding/geojson"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func serializeCoord(coord geom.Coord) []float64 {
