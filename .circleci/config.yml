@@ -2,9 +2,9 @@ version: 2
 jobs:
   build:
     machine: true
-    working_directory: /dist
+    working_directory: ~/build
     steps:
       - checkout
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - run: docker build -t statecraft/borg:v${CIRCLE_BUILD_NUM} ./dist/.
+      - run: docker build -t statecraft/borg:v${CIRCLE_BUILD_NUM} ~/build/.
       - run: docker push statecraft/borg:v${CIRCLE_BUILD_NUM}
