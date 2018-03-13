@@ -15,3 +15,17 @@ jobs:
       - run: go build
       - store_artifacts:
           path: /go/src/github.com/statecrafthq/borg/borg
+          destination: borg
+      - persist_to_workspace:
+          root: /go/src/github.com/statecrafthq/borg/
+           paths:
+            - './borg'
+            - './Dockerfile'
+  docker:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./dist
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - run: docker build -t statecraft/borg:v${CIRCLE_BUILD_NUM} ./dist/.
+      - run: docker push statecraft/borg:v${CIRCLE_BUILD_NUM}
