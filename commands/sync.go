@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -79,6 +80,31 @@ func uploadFile(ctx context.Context, bucket *storage.BucketHandle, name string, 
 	return writer.Close()
 }
 
+func downloadFile(ctx context.Context, bucket *storage.BucketHandle, name string, status CurrentSyncStatus, dst string) error {
+	reader, err := bucket.Object("imports/" + name + "/" + status.Latest).NewReader(ctx)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	file, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
+	hash, err := utils.SHA256File(dst)
+	if err != nil {
+		return err
+	}
+	if status.Hash != hash {
+		return errors.New("Broken file")
+	}
+	return nil
+}
+
 func sync(c *cli.Context) error {
 	file := c.String("file")
 	name := c.String("name")
@@ -121,14 +147,14 @@ func sync(c *cli.Context) error {
 		}
 	}
 	if !changed {
+		log.Println("Dataset wasn't changed")
 		return nil
 	}
 
 	// Upload new version
-	log.Println("Changed!")
+	log.Println("Dataset was changed")
 	ext := filepath.Ext(file)
 	fname := name + "_" + (time.Now().Format("2006_01_02_150405")) + ext
-	log.Printf(fname)
 	err = uploadFile(ctx, bucket, name, fname, file)
 	if err != nil {
 		return err
@@ -139,6 +165,46 @@ func sync(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func download(c *cli.Context) error {
+	file := c.String("file")
+	name := c.String("name")
+	if file == "" {
+		return cli.NewExitError("Source file is not provided", 1)
+	}
+	if name == "" {
+		return cli.NewExitError("Dataset name is not provided", 1)
+	}
+	var validID = regexp.MustCompile(`^[a-z0-9_]+$`)
+	if !validID.MatchString(name) {
+		return cli.NewExitError("Invalid name", 1)
+	}
+
+	// Init Bucket API
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+	bucket := client.Bucket("data.openland.com")
+
+	// Loading latest state
+	status, err := readStatus(ctx, bucket, name)
+	if err != nil {
+		return err
+	}
+	if status == nil {
+		return cli.NewExitError("Unable to find dataset", 1)
+	}
+
+	// Downloading
+	err = downloadFile(ctx, bucket, name, *status, file)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -159,6 +225,23 @@ func CreateSyncCommands() []cli.Command {
 			},
 			Action: func(c *cli.Context) error {
 				return sync(c)
+			},
+		},
+		{
+			Name:  "download",
+			Usage: "Download Dataset",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file",
+					Usage: "Path to dataset",
+				},
+				cli.StringFlag{
+					Name:  "name",
+					Usage: "Unique name of dataset",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				return download(c)
 			},
 		},
 	}
