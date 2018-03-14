@@ -16,6 +16,13 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
+func builtInQueries() map[string]string {
+	res := make(map[string]string)
+	res["blocks"] = "mutation($data: [BlockInput!]!, $state: String!, $county: String!, $city: String!) { importBlocks(tate: $state, county: $county, city: $city, blocks: $data) }"
+	res["parcels"] = "mutation($data: [ParcelInput!]!, $state: String!, $county: String!, $city: String!) { importParcels(state: $state, county: $county, city: $city, parcels: $data) }"
+	return res
+}
+
 func lineCounter(r io.Reader) (int, error) {
 	buf := make([]byte, 32*1024)
 	count := 0
@@ -50,6 +57,10 @@ func doQuery(c *cli.Context, streaming bool) error {
 			return err
 		}
 		body = string(data)
+	} else if c.String("query") != "" {
+		queries := builtInQueries()
+		query := c.String("query")
+		body = queries[query]
 	} else {
 		return cli.NewExitError("You should provide query or file argument", 1)
 	}
@@ -244,6 +255,10 @@ func CreateImportingCommands() []cli.Command {
 				cli.StringSliceFlag{
 					Name:  "variable, v",
 					Usage: "Variables to query key=value",
+				},
+				cli.StringFlag{
+					Name:  "query",
+					Usage: "Built-in query: blocks, parcels",
 				},
 				cli.IntFlag{
 					Name:  "batch",
