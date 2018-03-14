@@ -96,6 +96,50 @@ func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 	return formats, nil
 }
 
+func newYorkParcelExtras(feature *utils.Feature, extras *Extras) error {
+	if feature.Properties["ZoneDist1"] != nil ||
+		feature.Properties["ZoneDist2"] != nil ||
+		feature.Properties["ZoneDist3"] != nil ||
+		feature.Properties["ZoneDist4"] != nil {
+		zoning := []string{}
+		if feature.Properties["ZoneDist1"] != nil {
+			zoning = append(zoning, feature.Properties["ZoneDist1"].(string))
+		}
+		if feature.Properties["ZoneDist2"] != nil {
+			zoning = append(zoning, feature.Properties["ZoneDist2"].(string))
+		}
+		if feature.Properties["ZoneDist3"] != nil {
+			zoning = append(zoning, feature.Properties["ZoneDist3"].(string))
+		}
+		if feature.Properties["ZoneDist4"] != nil {
+			zoning = append(zoning, feature.Properties["ZoneDist4"].(string))
+		}
+		extras.AppendEnum("zoning", zoning)
+	}
+	if feature.Properties["UnitsTotal"] != nil {
+		extras.AppendInt("count_rooms", int32(feature.Properties["UnitsTotal"].(float64)))
+	}
+	if feature.Properties["NumBldgs"] != nil {
+		extras.AppendInt("count_units", int32(feature.Properties["NumBldgs"].(float64)))
+	}
+	if feature.Properties["NumFloors"] != nil {
+		extras.AppendInt("count_stories", int32(feature.Properties["NumFloors"].(float64)))
+	}
+	if feature.Properties["YearBuilt"] != nil {
+		extras.AppendInt("year_built", int32(feature.Properties["YearBuilt"].(float64)))
+	}
+	if feature.Properties["Address"] != nil {
+		extras.AppendString("address", feature.Properties["Address"].(string))
+	}
+	if feature.Properties["OwnerName"] != nil {
+		extras.AppendString("owner_name", feature.Properties["OwnerName"].(string))
+	}
+	if feature.Properties["AssessLand"] != nil {
+		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
+	}
+	return nil
+}
+
 // NewYorkBlocksDriver driver for NYC blocks datasets
 func NewYorkBlocksDriver() Driver {
 	return Driver{ID: newYorkBlockID, Extras: EmptyExtras}
@@ -103,5 +147,5 @@ func NewYorkBlocksDriver() Driver {
 
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
-	return Driver{ID: newYorkParcelID, Extras: EmptyExtras}
+	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras}
 }

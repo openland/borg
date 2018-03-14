@@ -92,6 +92,16 @@ func (e *Extras) AppendString(key string, value string) {
 	e.Strings = append(e.Strings, ExtrasString{Key: key, Value: value})
 }
 
+func (e *Extras) AppendEnum(key string, value []string) {
+	e.DeleteKey(key)
+	e.Enums = append(e.Enums, ExtrasEnum{Key: key, Value: value})
+}
+
+func (e *Extras) AppendInt(key string, value int32) {
+	e.DeleteKey(key)
+	e.Ints = append(e.Ints, ExtrasInt{Key: key, Value: value})
+}
+
 type Extras struct {
 	Enums   []ExtrasEnum   `json:"enums"`
 	Strings []ExtrasString `json:"strings"`
