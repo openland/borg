@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/statecrafthq/borg/commands/formats"
+	"github.com/statecrafthq/borg/commands/drivers"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/twpayne/go-geom/encoding/geojson"
 	"github.com/urfave/cli"
@@ -50,7 +50,7 @@ func convertShapefile(c *cli.Context) error {
 func converGeoJson(c *cli.Context) error {
 	src := c.String("src")
 	dst := c.String("dst")
-	formatID := c.String("format")
+	driverID := c.String("driver")
 	strict := c.Bool("strict")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
@@ -58,15 +58,15 @@ func converGeoJson(c *cli.Context) error {
 	if dst == "" {
 		return cli.NewExitError("Destination file is not provided", 1)
 	}
-	if formatID == "" {
-		return cli.NewExitError("Format is not provided", 1)
+	if driverID == "" {
+		return cli.NewExitError("driver is not provided", 1)
 	}
 
-	allFormats := formats.Formats()
-	if _, ok := allFormats[strings.ToLower(formatID)]; !ok {
-		return cli.NewExitError("Unable to find required format", 1)
+	allDrivers := drivers.Drivers()
+	if _, ok := allDrivers[strings.ToLower(driverID)]; !ok {
+		return cli.NewExitError("Unable to find required driver", 1)
 	}
-	format := allFormats[strings.ToLower(formatID)]
+	driver := allDrivers[strings.ToLower(driverID)]
 
 	//
 	// Existing file
@@ -108,7 +108,9 @@ func converGeoJson(c *cli.Context) error {
 	// Iterating each feature
 	//
 	err = utils.IterateFeatures(body, strict, func(feature *geojson.Feature) error {
-		idValue, err := format.ID(feature)
+
+		// Loading ID
+		idValue, err := driver.ID(feature)
 		if err != nil {
 			return err
 		}
@@ -132,10 +134,21 @@ func converGeoJson(c *cli.Context) error {
 			}
 		}
 
+		// Loading Extras
+		extras := drivers.NewExtras()
+		err = driver.Extras(feature, &extras)
+		if err != nil {
+			return err
+		}
+
 		// Preparing Bundle
 		fields := make(map[string]interface{})
-		fields["id"] = idValue
+		fields["id"] = idValue[0]
+		if len(idValue) > 1 {
+			fields["displayId"] = idValue[1:]
+		}
 		fields["geometry"] = coordinates
+		fields["extras"] = extras
 
 		// Writing
 		marshaled, err := json.Marshal(fields)
@@ -193,7 +206,7 @@ func CreateConvertingCommands() []cli.Command {
 							Usage: "path to destination file",
 						},
 						cli.StringFlag{
-							Name:  "format",
+							Name:  "format,driver",
 							Usage: "ny_blocks, ny_parcels, sf_blocks, sf_parcels",
 						},
 						cli.BoolFlag{
