@@ -252,13 +252,13 @@ func CreateImportingCommands() []cli.Command {
 					Name:  "file, f",
 					Usage: "Body of query from file",
 				},
-				cli.StringSliceFlag{
-					Name:  "variable, v",
-					Usage: "Variables to query key=value",
-				},
 				cli.StringFlag{
 					Name:  "query",
 					Usage: "Built-in query: blocks, parcels",
+				},
+				cli.StringSliceFlag{
+					Name:  "variable, v",
+					Usage: "Variables to query key=value",
 				},
 				cli.IntFlag{
 					Name:  "batch",
