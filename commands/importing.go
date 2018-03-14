@@ -18,7 +18,7 @@ import (
 
 func builtInQueries() map[string]string {
 	res := make(map[string]string)
-	res["blocks"] = "mutation($data: [BlockInput!]!, $state: String!, $county: String!, $city: String!) { importBlocks(tate: $state, county: $county, city: $city, blocks: $data) }"
+	res["blocks"] = "mutation($data: [BlockInput!]!, $state: String!, $county: String!, $city: String!) { importBlocks(state: $state, county: $county, city: $city, blocks: $data) }"
 	res["parcels"] = "mutation($data: [ParcelInput!]!, $state: String!, $county: String!, $city: String!) { importParcels(state: $state, county: $county, city: $city, parcels: $data) }"
 	return res
 }
