@@ -1,17 +1,17 @@
 package drivers
 
 import (
-	"github.com/twpayne/go-geom/encoding/geojson"
+	"github.com/statecrafthq/borg/utils"
 )
 
 // IDFunction is a function for ID resolvers
-type IDFunction = func(feature *geojson.Feature) ([]string, error)
+type IDFunction = func(feature *utils.Feature) ([]string, error)
 
 // ExtrasFunction Builds extra fields
-type ExtrasFunction func(feature *geojson.Feature, extras *Extras) error
+type ExtrasFunction func(feature *utils.Feature, extras *Extras) error
 
 // EmptyExtras is a function for empty extras
-func EmptyExtras(feature *geojson.Feature, extras *Extras) error {
+func EmptyExtras(feature *utils.Feature, extras *Extras) error {
 	return nil
 }
 

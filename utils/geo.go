@@ -8,7 +8,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/twpayne/go-geom"
-	"github.com/twpayne/go-geom/encoding/geojson"
+	enc "github.com/twpayne/go-geom/encoding/geojson"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -104,7 +104,12 @@ func ValidateGeometry(polygons [][][][]float64) error {
 	return nil
 }
 
-func IterateFeatures(data []byte, strict bool, cb func(feature *geojson.Feature) error) error {
+type Feature struct {
+	Geometry   *geom.T
+	Properties map[string]interface{}
+}
+
+func IterateFeatures(data []byte, strict bool, cb func(feature *Feature) error) error {
 	bar := pb.StartNew(len(data))
 	var existingError error
 	_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -122,14 +127,38 @@ func IterateFeatures(data []byte, strict bool, cb func(feature *geojson.Feature)
 		}()
 		bar.Set(offset)
 
-		// TODO: Handle errors!
-		feature := &geojson.Feature{}
-		err = json.Unmarshal(value, &feature)
+		// Parsing Properties
+		v, t, _, err := jsonparser.Get(value, "properties")
 		if err != nil {
 			log.Panic(err)
 		}
+		properties := make(map[string]interface{})
+		if t != jsonparser.NotExist {
+			err = json.Unmarshal(v, &properties)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
 
-		// If failed ignore all other
+		// Parsing Geometry
+		v, t, _, err = jsonparser.Get(value, "geometry")
+		if err != nil {
+			log.Panic(err)
+		}
+		var geometry geom.T
+		if t != jsonparser.NotExist {
+			err = enc.Unmarshal(v, &geometry)
+
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+
+		// Building Feature
+		feature := &Feature{Properties: properties, Geometry: &geometry}
+
+		// If failed ignore all subsequent
+		// TODO: How we can handle this better?
 		existingError = cb(feature)
 		if !strict && existingError != nil {
 			panic(existingError)

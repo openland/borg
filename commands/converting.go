@@ -10,7 +10,6 @@ import (
 
 	"github.com/statecrafthq/borg/commands/drivers"
 	"github.com/statecrafthq/borg/utils"
-	"github.com/twpayne/go-geom/encoding/geojson"
 	"github.com/urfave/cli"
 )
 
@@ -107,7 +106,7 @@ func converGeoJson(c *cli.Context) error {
 	//
 	// Iterating each feature
 	//
-	err = utils.IterateFeatures(body, strict, func(feature *geojson.Feature) error {
+	err = utils.IterateFeatures(body, strict, func(feature *utils.Feature) error {
 
 		// Loading ID
 		idValue, err := driver.ID(feature)
@@ -116,7 +115,11 @@ func converGeoJson(c *cli.Context) error {
 		}
 
 		// Parsing Coordinates
-		coordinates, err := utils.SerializeGeometry(feature.Geometry)
+		// Ignore if geometry missing
+		if feature.Geometry == nil {
+			return nil
+		}
+		coordinates, err := utils.SerializeGeometry(*feature.Geometry)
 		if err != nil {
 			return err
 		}
