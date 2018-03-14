@@ -109,6 +109,25 @@ type Feature struct {
 	Properties map[string]interface{}
 }
 
+func IterateFeaturesRaw(data []byte, cb func(feature []byte) error) error {
+	bar := pb.StartNew(len(data))
+	var existingError error
+	_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		if existingError != nil {
+			return
+		}
+		bar.Set(offset)
+		existingError = cb(value)
+	}, "features")
+	if err != nil {
+		return err
+	}
+	if existingError != nil {
+		return existingError
+	}
+	return nil
+}
+
 func IterateFeatures(data []byte, strict bool, cb func(feature *Feature) error) error {
 	bar := pb.StartNew(len(data))
 	var existingError error
