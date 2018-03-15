@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -107,6 +108,32 @@ func converGeoJson(c *cli.Context) error {
 	//
 	// Iterating each feature
 	//
+
+	//
+	// Detecting multiple features for same ID
+	//
+
+	featureCounts := make(map[string]int32)
+	err = utils.IterateFeatures(body, strict, func(feature *utils.Feature) error {
+		idValue, err := driver.ID(feature)
+		if err != nil {
+			return err
+		}
+
+		if val, ok := featureCounts[idValue[0]]; ok {
+			featureCounts[idValue[0]] = val + 1
+		} else {
+			featureCounts[idValue[0]] = 1
+		}
+
+		return nil
+	})
+
+	//
+	// Converting Features
+	//
+	pendingFeatures := make(map[string][][][][]float64)
+	pendingFeaturesCount := make(map[string]int32)
 	err = utils.IterateFeatures(body, strict, func(feature *utils.Feature) error {
 
 		// Loading ID
@@ -114,6 +141,26 @@ func converGeoJson(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+
+		// Check if present on counters
+		var totlaCount int32
+		if val, ok := featureCounts[idValue[0]]; ok {
+			totlaCount = val
+		} else {
+			return errors.New("Internal inconsistency")
+		}
+
+		// Check how many features for this ID is already processed
+		var currentCount int32
+		if val, ok := pendingFeaturesCount[idValue[0]]; ok {
+			currentCount = val + 1
+		} else {
+			currentCount = 1
+		}
+		pendingFeaturesCount[idValue[0]] = currentCount
+
+		// Check if we are reached end for specific feature
+		isLast := currentCount >= totlaCount
 
 		// Parsing Coordinates
 		// Ignore if geometry missing
@@ -145,6 +192,26 @@ func converGeoJson(c *cli.Context) error {
 			}
 		}
 
+		//
+		// Merging Geometry
+		//
+
+		currentCoordinates := make([][][][]float64, 0)
+		if val, ok := pendingFeatures[idValue[0]]; ok {
+			currentCoordinates = val
+		}
+		for _, poly := range coordinates {
+			currentCoordinates = append(currentCoordinates, poly)
+		}
+
+		// Update pending if is not last and delete from memory ASAP
+		if !isLast {
+			pendingFeatures[idValue[0]] = currentCoordinates
+			return nil
+		}
+		delete(pendingFeatures, idValue[0])
+		delete(pendingFeaturesCount, idValue[0])
+
 		// Loading Extras
 		extras := drivers.NewExtras()
 		err = driver.Extras(feature, &extras)
@@ -158,7 +225,7 @@ func converGeoJson(c *cli.Context) error {
 		if len(idValue) > 1 {
 			fields["displayId"] = idValue[1:]
 		}
-		fields["geometry"] = coordinates
+		fields["geometry"] = currentCoordinates
 		fields["extras"] = extras
 
 		// Writing
