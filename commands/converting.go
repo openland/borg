@@ -51,6 +51,7 @@ func converGeoJson(c *cli.Context) error {
 	dst := c.String("dst")
 	driverID := c.String("driver")
 	strict := c.Bool("strict")
+	fixAll := c.Bool("fix-all")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
 	}
@@ -125,15 +126,22 @@ func converGeoJson(c *cli.Context) error {
 		}
 
 		// Fixing invalid polygons
-		err = utils.ValidateGeometry(coordinates)
-		if err != nil {
+		if fixAll {
 			coordinates, err = utils.PolygonRepair(coordinates)
 			if err != nil {
 				return err
 			}
+		} else {
 			err = utils.ValidateGeometry(coordinates)
 			if err != nil {
-				return err
+				coordinates, err = utils.PolygonRepair(coordinates)
+				if err != nil {
+					return err
+				}
+				err = utils.ValidateGeometry(coordinates)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -219,6 +227,10 @@ func CreateConvertingCommands() []cli.Command {
 						cli.BoolFlag{
 							Name:  "strict",
 							Usage: "Crash on invalid record",
+						},
+						cli.BoolFlag{
+							Name:  "fix-all",
+							Usage: "Fix all polygons",
 						},
 					},
 					Action: func(c *cli.Context) error {
