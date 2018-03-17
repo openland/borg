@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func ShapefileToGeoJson(src string, dst string) error {
+func ShapefileToGeoJson(src string, dst string, simplify bool) error {
 	exist := FileExists(dst)
 	if exist {
 		return cli.NewExitError("File already exists", 1)
@@ -17,7 +17,12 @@ func ShapefileToGeoJson(src string, dst string) error {
 	if e != nil {
 		return e
 	}
-	command := exec.Command("ogr2ogr", "-f", "GeoJSON", "-t_srs", "crs:84", dst, src)
+	var command *exec.Cmd
+	if simplify {
+		command = exec.Command("ogr2ogr", "-f", "GeoJSON", "-t_srs", "crs:84", "-simplify", "0.00001", dst, src)
+	} else {
+		command = exec.Command("ogr2ogr", "-f", "GeoJSON", "-t_srs", "crs:84", dst, src)
+	}
 	var out bytes.Buffer
 	command.Stdout = &out
 	err := command.Run()
@@ -27,7 +32,7 @@ func ShapefileToGeoJson(src string, dst string) error {
 	return err
 }
 
-func GeoJsonToShapefile(src string, dst string) error {
+func GeoJsonToShapefile(src string, dst string, simplify bool) error {
 	exist := FileExists(dst)
 	if exist {
 		return cli.NewExitError("File already exists", 1)
@@ -36,7 +41,13 @@ func GeoJsonToShapefile(src string, dst string) error {
 	if e != nil {
 		return e
 	}
-	command := exec.Command("ogr2ogr", "-f", "ESRI Shapefile", dst, src)
+	var command *exec.Cmd
+	if simplify {
+		command = exec.Command("ogr2ogr", "-f", "ESRI Shapefile", "-simplify", "0.00001", dst, src)
+	} else {
+		command = exec.Command("ogr2ogr", "-f", "ESRI Shapefile", dst, src)
+	}
+
 	var out bytes.Buffer
 	command.Stdout = &out
 	err := command.Run()

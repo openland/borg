@@ -17,6 +17,7 @@ import (
 func convertShapefile(c *cli.Context) error {
 	src := c.String("src")
 	dst := c.String("dst")
+	simplify := c.Bool("simplify")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
 	}
@@ -44,7 +45,7 @@ func convertShapefile(c *cli.Context) error {
 	// Starting conversion
 	//
 
-	return utils.ShapefileToGeoJson(src, dst)
+	return utils.ShapefileToGeoJson(src, dst, simplify)
 }
 
 func converGeoJson(c *cli.Context) error {
@@ -265,6 +266,10 @@ func CreateConvertingCommands() []cli.Command {
 						cli.BoolFlag{
 							Name:  "force, f",
 							Usage: "Overwrite file if exists",
+						},
+						cli.BoolFlag{
+							Name:  "simplify",
+							Usage: "Simplify Geometry",
 						},
 					},
 					Action: func(c *cli.Context) error {
