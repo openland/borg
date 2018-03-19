@@ -102,6 +102,11 @@ func (e *Extras) AppendInt(key string, value int32) {
 	e.Ints = append(e.Ints, ExtrasInt{Key: key, Value: value})
 }
 
+func (e *Extras) AppendFloat(key string, value float64) {
+	e.DeleteKey(key)
+	e.Floats = append(e.Floats, ExtrasFloat{Key: key, Value: value})
+}
+
 type Extras struct {
 	Enums   []ExtrasEnum   `json:"enums"`
 	Strings []ExtrasString `json:"strings"`
@@ -119,7 +124,7 @@ type ExtrasString struct {
 }
 type ExtrasFloat struct {
 	Key   string  `json:"key"`
-	Value float32 `json:"value"`
+	Value float64 `json:"value"`
 }
 type ExtrasInt struct {
 	Key   string `json:"key"`

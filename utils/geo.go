@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 
 	"github.com/buger/jsonparser"
 	"github.com/twpayne/go-geom"
@@ -206,4 +207,58 @@ func IterateFeatures(data []byte, strict bool, displayErrors bool, cb func(featu
 		return existingError
 	}
 	return nil
+}
+
+// Ported from https://github.com/mapbox/geojson-area/blob/master/index.js
+
+func rad(src float64) float64 {
+	return src * math.Pi / 180
+}
+
+func measureRingArea(coords [][]float64) float64 {
+	var p1, p2, p3 []float64
+	var lowerIndex, middleIndex, upperIndex, i int
+	var area float64
+	area = 0
+	coordsLength := len(coords)
+
+	if coordsLength > 2 {
+		for i = 0; i < coordsLength; i++ {
+			if i == coordsLength-2 { // i = N-2
+				lowerIndex = coordsLength - 2
+				middleIndex = coordsLength - 1
+				upperIndex = 0
+			} else if i == coordsLength-1 { // i = N-1
+				lowerIndex = coordsLength - 1
+				middleIndex = 0
+				upperIndex = 1
+			} else { // i = 0 to N-3
+				lowerIndex = i
+				middleIndex = i + 1
+				upperIndex = i + 2
+			}
+			p1 = coords[lowerIndex]
+			p2 = coords[middleIndex]
+			p3 = coords[upperIndex]
+			area += (rad(p3[0]) - rad(p1[0])) * math.Sin(rad(p2[1]))
+		}
+
+		// wgs84.RADIUS = 6378137
+		area = area * 6378137 * 6378137 / 2
+	}
+
+	return area
+}
+
+func MeasureArea(src [][][][]float64) float64 {
+	var res float64 = 0
+	for _, poly := range src {
+		if len(poly) > 0 {
+			res += math.Abs(measureRingArea(poly[0]))
+			for i := 1; i < len(poly); i++ {
+				res += math.Abs(measureRingArea(poly[i]))
+			}
+		}
+	}
+	return res
 }

@@ -258,7 +258,10 @@ func converGeoJson(c *cli.Context) error {
 		if len(idValue) > 1 {
 			fields["displayId"] = idValue[1:]
 		}
-		fields["geometry"] = currentCoordinates
+		if len(currentCoordinates) > 0 {
+			fields["geometry"] = currentCoordinates
+			extras.AppendFloat("area", utils.MeasureArea(currentCoordinates))
+		}
 		fields["extras"] = extras
 
 		// Writing
