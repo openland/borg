@@ -128,7 +128,7 @@ func IterateFeaturesRaw(data []byte, cb func(feature []byte) error) error {
 	return nil
 }
 
-func IterateFeatures(data []byte, strict bool, cb func(feature *Feature) error) error {
+func IterateFeatures(data []byte, strict bool, displayErrors bool, cb func(feature *Feature) error) error {
 	bar := pb.StartNew(len(data))
 	var existingError error
 	_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -139,9 +139,11 @@ func IterateFeatures(data []byte, strict bool, cb func(feature *Feature) error) 
 			// recover from panic if one occured. Set err to nil otherwise.
 			if err := recover(); err != nil {
 				// 	err = errors.New("array index out of bounds")
-				fmt.Println("Error in record:")
-				fmt.Println(string(value))
-				fmt.Println(err)
+				if displayErrors {
+					fmt.Println("Error in record:")
+					fmt.Println(string(value))
+					fmt.Println(err)
+				}
 			}
 		}()
 		bar.Set(offset)

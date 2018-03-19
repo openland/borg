@@ -53,6 +53,7 @@ func converGeoJson(c *cli.Context) error {
 	dst := c.String("dst")
 	driverID := c.String("driver")
 	strict := c.Bool("strict")
+	noErrors := c.Bool("no-error-logging")
 	fixAll := c.Bool("fix-all")
 	if src == "" {
 		return cli.NewExitError("Source file is not provided", 1)
@@ -115,7 +116,7 @@ func converGeoJson(c *cli.Context) error {
 	//
 
 	featureCounts := make(map[string]int32)
-	err = utils.IterateFeatures(body, strict, func(feature *utils.Feature) error {
+	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
 		idValue, err := driver.ID(feature)
 		if err != nil {
 			return err
@@ -135,7 +136,7 @@ func converGeoJson(c *cli.Context) error {
 	//
 	pendingFeatures := make(map[string][][][][]float64)
 	pendingFeaturesCount := make(map[string]int32)
-	err = utils.IterateFeatures(body, strict, func(feature *utils.Feature) error {
+	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
 
 		// Loading ID
 		idValue, err := driver.ID(feature)
@@ -303,6 +304,10 @@ func CreateConvertingCommands() []cli.Command {
 						cli.BoolFlag{
 							Name:  "fix-all",
 							Usage: "Fix all polygons",
+						},
+						cli.BoolFlag{
+							Name:  "no-error-logging",
+							Usage: "Disable error logging",
 						},
 					},
 					Action: func(c *cli.Context) error {

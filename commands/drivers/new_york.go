@@ -142,10 +142,10 @@ func newYorkParcelExtras(feature *utils.Feature, extras *Extras) error {
 
 // NewYorkBlocksDriver driver for NYC blocks datasets
 func NewYorkBlocksDriver() Driver {
-	return Driver{ID: newYorkBlockID, Extras: EmptyExtras}
+	return Driver{ID: newYorkBlockID, Extras: EmptyExtras, Record: DefaultRecord}
 }
 
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
-	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras}
+	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: DefaultRecord}
 }
