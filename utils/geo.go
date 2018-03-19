@@ -75,7 +75,8 @@ func SerializeGeometry(g geom.T) ([][][][]float64, error) {
 	case *geom.MultiPolygon:
 		return serializeCoordArray3(g.Coords()), nil
 	default:
-		return nil, errors.New("Unsupported poing type")
+		log.Println(g)
+		return nil, errors.New("Unsupported gometry type")
 	}
 }
 
@@ -167,16 +168,23 @@ func IterateFeatures(data []byte, strict bool, displayErrors bool, cb func(featu
 			log.Panic(err)
 		}
 		var geometry geom.T
-		if t != jsonparser.NotExist {
+		hasGeometry := false
+		if t != jsonparser.NotExist && t != jsonparser.Null {
 			err = enc.Unmarshal(v, &geometry)
 
 			if err != nil {
 				log.Panic(err)
+			} else {
+				hasGeometry = true
 			}
 		}
 
 		// Building Feature
-		feature := &Feature{Properties: properties, Geometry: &geometry}
+		var geometryRef *geom.T
+		if hasGeometry {
+			geometryRef = &geometry
+		}
+		feature := &Feature{Properties: properties, Geometry: geometryRef}
 
 		// If failed ignore all subsequent
 		// TODO: How we can handle this better?
@@ -185,6 +193,7 @@ func IterateFeatures(data []byte, strict bool, displayErrors bool, cb func(featu
 			panic(existingError)
 		}
 	}, "features")
+	bar.Finish()
 
 	if err != nil {
 		return err

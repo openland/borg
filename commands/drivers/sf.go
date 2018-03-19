@@ -8,7 +8,7 @@ func sanFranciscoLotsID(feature *utils.Feature) ([]string, error) {
 
 func sanFranciscoClassifier(feature *utils.Feature) (RecordType, error) {
 	if feature.Properties["blklot"] != feature.Properties["mapblklot"] {
-		return Auxlary, nil
+		return Auxiliary, nil
 	}
 	return Primary, nil
 }

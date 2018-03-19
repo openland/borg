@@ -12,6 +12,7 @@ import (
 	"github.com/statecrafthq/borg/commands/drivers"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/urfave/cli"
+	emoji "gopkg.in/kyokomi/emoji.v1"
 )
 
 func convertShapefile(c *cli.Context) error {
@@ -115,11 +116,25 @@ func converGeoJson(c *cli.Context) error {
 	// Detecting multiple features for same ID
 	//
 
+	emoji.Println(":hammer: Collecting stats about dataset")
 	featureCounts := make(map[string]int32)
 	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
+
+		// ID
 		idValue, err := driver.ID(feature)
 		if err != nil {
 			return err
+		}
+
+		// Record type
+		recordType, err := driver.Record(feature)
+		if err != nil {
+			return err
+		}
+
+		// Ignored fields
+		if recordType == drivers.Ignored {
+			return nil
 		}
 
 		if val, ok := featureCounts[idValue[0]]; ok {
@@ -134,6 +149,7 @@ func converGeoJson(c *cli.Context) error {
 	//
 	// Converting Features
 	//
+	emoji.Println(":hammer: Processing dataset")
 	pendingFeatures := make(map[string][][][][]float64)
 	pendingFeaturesCount := make(map[string]int32)
 	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
@@ -142,6 +158,17 @@ func converGeoJson(c *cli.Context) error {
 		idValue, err := driver.ID(feature)
 		if err != nil {
 			return err
+		}
+
+		// Record type
+		recordType, err := driver.Record(feature)
+		if err != nil {
+			return err
+		}
+
+		// Ignored fields
+		if recordType == drivers.Ignored {
+			return nil
 		}
 
 		// Check if present on counters
@@ -166,30 +193,30 @@ func converGeoJson(c *cli.Context) error {
 
 		// Parsing Coordinates
 		// Ignore if geometry missing
-		if feature.Geometry == nil {
-			return nil
-		}
-		coordinates, err := utils.SerializeGeometry(*feature.Geometry)
-		if err != nil {
-			return err
-		}
-
-		// Fixing invalid polygons
-		if fixAll {
-			coordinates, err = utils.PolygonRepair(coordinates)
+		var coordinates [][][][]float64
+		if feature.Geometry != nil {
+			coordinates, err = utils.SerializeGeometry(*feature.Geometry)
 			if err != nil {
 				return err
 			}
-		} else {
-			err = utils.ValidateGeometry(coordinates)
-			if err != nil {
+
+			// Fixing invalid polygons
+			if fixAll {
 				coordinates, err = utils.PolygonRepair(coordinates)
 				if err != nil {
 					return err
 				}
+			} else {
 				err = utils.ValidateGeometry(coordinates)
 				if err != nil {
-					return err
+					coordinates, err = utils.PolygonRepair(coordinates)
+					if err != nil {
+						return err
+					}
+					err = utils.ValidateGeometry(coordinates)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -202,13 +229,20 @@ func converGeoJson(c *cli.Context) error {
 		if val, ok := pendingFeatures[idValue[0]]; ok {
 			currentCoordinates = val
 		}
-		for _, poly := range coordinates {
-			currentCoordinates = append(currentCoordinates, poly)
+
+		// Merge geometry only for primary records
+		if recordType == drivers.Primary && feature.Geometry != nil {
+			for _, poly := range coordinates {
+				currentCoordinates = append(currentCoordinates, poly)
+			}
 		}
 
 		// Update pending if is not last and delete from memory ASAP
 		if !isLast {
-			pendingFeatures[idValue[0]] = currentCoordinates
+			// Save pending geometry only for primary records
+			if recordType == drivers.Primary {
+				pendingFeatures[idValue[0]] = currentCoordinates
+			}
 			return nil
 		}
 		delete(pendingFeatures, idValue[0])
@@ -233,9 +267,12 @@ func converGeoJson(c *cli.Context) error {
 		// Writing
 		marshaled, err := json.Marshal(fields)
 		if err != nil {
-			return nil
+			return err
 		}
-		fmt.Fprintln(w, string(marshaled))
+		_, err = fmt.Fprintln(w, string(marshaled))
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})

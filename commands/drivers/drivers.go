@@ -21,12 +21,19 @@ func DefaultRecord(feature *utils.Feature) (RecordType, error) {
 	return Primary, nil
 }
 
+func IgnoreWithoutGeometry(feature *utils.Feature) (RecordType, error) {
+	if feature.Geometry == nil {
+		return Ignored, nil
+	}
+	return Primary, nil
+}
+
 type RecordType int32
 
 const (
-	Auxlary RecordType = 0
-	Primary RecordType = 1
-	Ignored RecordType = 2
+	Auxiliary RecordType = 0
+	Primary   RecordType = 1
+	Ignored   RecordType = 2
 )
 
 // Driver handles all configuration for specific driver
