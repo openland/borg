@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,25 +20,6 @@ func builtInQueries() map[string]string {
 	res["blocks"] = "mutation($data: [BlockInput!]!, $state: String!, $county: String!, $city: String!) { importBlocks(state: $state, county: $county, city: $city, blocks: $data) }"
 	res["parcels"] = "mutation($data: [ParcelInput!]!, $state: String!, $county: String!, $city: String!) { importParcels(state: $state, county: $county, city: $city, parcels: $data) }"
 	return res
-}
-
-func lineCounter(r io.Reader) (int, error) {
-	buf := make([]byte, 32*1024)
-	count := 0
-	lineSep := []byte{'\n'}
-
-	for {
-		c, err := r.Read(buf)
-		count += bytes.Count(buf[:c], lineSep)
-
-		switch {
-		case err == io.EOF:
-			return count, nil
-
-		case err != nil:
-			return count, err
-		}
-	}
 }
 
 func doQuery(c *cli.Context, streaming bool) error {
@@ -114,11 +94,10 @@ func doQuery(c *cli.Context, streaming bool) error {
 		defer file.Close()
 
 		// Line number
-		lines, e := lineCounter(file)
+		lines, e := utils.CountLines(file)
 		if e != nil {
 			return e
 		}
-		file.Seek(0, 0)
 
 		//
 		// Reading And Importing
