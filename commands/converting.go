@@ -120,12 +120,6 @@ func converGeoJson(c *cli.Context) error {
 	featureCounts := make(map[string]int32)
 	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
 
-		// ID
-		idValue, err := driver.ID(feature)
-		if err != nil {
-			return err
-		}
-
 		// Record type
 		recordType, err := driver.Record(feature)
 		if err != nil {
@@ -135,6 +129,12 @@ func converGeoJson(c *cli.Context) error {
 		// Ignored fields
 		if recordType == drivers.Ignored {
 			return nil
+		}
+
+		// ID
+		idValue, err := driver.ID(feature)
+		if err != nil {
+			return err
 		}
 
 		if val, ok := featureCounts[idValue[0]]; ok {
@@ -154,13 +154,6 @@ func converGeoJson(c *cli.Context) error {
 	pendingFeaturesCount := make(map[string]int32)
 	err = utils.IterateFeatures(body, strict, !noErrors, func(feature *utils.Feature) error {
 
-		// Loading ID
-		idValue, err := driver.ID(feature)
-		if err != nil {
-			return err
-		}
-		primaryID := idValue[0]
-
 		// Record type
 		recordType, err := driver.Record(feature)
 		if err != nil {
@@ -170,6 +163,19 @@ func converGeoJson(c *cli.Context) error {
 		// Ignored fields
 		if recordType == drivers.Ignored {
 			return nil
+		}
+
+		// Loading ID
+		idValue, err := driver.ID(feature)
+		if err != nil {
+			return err
+		}
+		primaryID := idValue[0]
+
+		// Retired type
+		retiredType, err := driver.Retired(feature)
+		if err != nil {
+			return err
 		}
 
 		// Check if present on counters
@@ -261,6 +267,13 @@ func converGeoJson(c *cli.Context) error {
 		if len(currentCoordinates) > 0 {
 			fields["geometry"] = currentCoordinates
 			extras.AppendFloat("area", utils.MeasureArea(currentCoordinates))
+		}
+		if retiredType != drivers.Unkwnon {
+			if retiredType == drivers.Retired {
+				fields["retired"] = true
+			} else {
+				fields["retired"] = false
+			}
 		}
 		fields["extras"] = extras
 
