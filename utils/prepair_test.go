@@ -3,7 +3,10 @@ package utils
 import "testing"
 
 func TestSplitting(t *testing.T) {
-	res := splitBrackets("(a,b,c,d),(e,f,g)")
+	res, e := splitBrackets("(a,b,c,d),(e,f,g)")
+	if e != nil {
+		t.Error(e)
+	}
 	if res[0] != "a,b,c,d" {
 		t.Errorf("Expected %s, got %s", "a,b,c,d", res[0])
 	}
@@ -11,7 +14,10 @@ func TestSplitting(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "e,f,g", res[1])
 	}
 
-	res = splitBrackets("(a,b,c,d),(e,f,g),(h,i,j)")
+	res, e = splitBrackets("(a,b,c,d),(e,f,g),(h,i,j)")
+	if e != nil {
+		t.Error(e)
+	}
 	if res[0] != "a,b,c,d" {
 		t.Errorf("Expected %s, got %s", "a,b,c,d", res[0])
 	}

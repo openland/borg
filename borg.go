@@ -27,7 +27,12 @@ func main() {
 	// Commands
 	//
 
-	app.Commands = append(append(append(commands.CreateImportingCommands(), commands.CreateConvertingCommands()...), commands.CreateSyncCommands()...), commands.CreateMergeCommands()...)
+	app.Commands = []cli.Command{}
+	app.Commands = append(app.Commands, commands.CreateImportingCommands()...)
+	app.Commands = append(app.Commands, commands.CreateConvertingCommands()...)
+	app.Commands = append(app.Commands, commands.CreateSyncCommands()...)
+	app.Commands = append(app.Commands, commands.CreateMergeCommands()...)
+	app.Commands = append(app.Commands, commands.CreateDiffCommands()...)
 
 	//
 	// Starting

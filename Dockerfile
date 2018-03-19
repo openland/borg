@@ -54,6 +54,6 @@ RUN go get \
     cloud.google.com/go/storage
 
 # Building Go
-RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go build && mv borg /usr/bin/
+RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go test ./... && go build && mv borg /usr/bin/
 
 ENTRYPOINT ["/usr/bin/borg"]
