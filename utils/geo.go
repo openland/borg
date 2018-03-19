@@ -106,7 +106,7 @@ func ValidateGeometry(polygons [][][][]float64) error {
 }
 
 type Feature struct {
-	Geometry   *geom.T
+	Geometry   *[][][][]float64
 	Properties map[string]interface{}
 }
 
@@ -180,9 +180,13 @@ func IterateFeatures(data []byte, strict bool, displayErrors bool, cb func(featu
 		}
 
 		// Building Feature
-		var geometryRef *geom.T
+		var geometryRef *[][][][]float64
 		if hasGeometry {
-			geometryRef = &geometry
+			res, err := SerializeGeometry(geometry)
+			if err != nil {
+				log.Panic(err)
+			}
+			geometryRef = &res
 		}
 		feature := &Feature{Properties: properties, Geometry: geometryRef}
 

@@ -159,6 +159,7 @@ func converGeoJson(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		primaryID := idValue[0]
 
 		// Record type
 		recordType, err := driver.Record(feature)
@@ -173,7 +174,7 @@ func converGeoJson(c *cli.Context) error {
 
 		// Check if present on counters
 		var totlaCount int32
-		if val, ok := featureCounts[idValue[0]]; ok {
+		if val, ok := featureCounts[primaryID]; ok {
 			totlaCount = val
 		} else {
 			return errors.New("Internal inconsistency")
@@ -181,12 +182,12 @@ func converGeoJson(c *cli.Context) error {
 
 		// Check how many features for this ID is already processed
 		var currentCount int32
-		if val, ok := pendingFeaturesCount[idValue[0]]; ok {
+		if val, ok := pendingFeaturesCount[primaryID]; ok {
 			currentCount = val + 1
 		} else {
 			currentCount = 1
 		}
-		pendingFeaturesCount[idValue[0]] = currentCount
+		pendingFeaturesCount[primaryID] = currentCount
 
 		// Check if we are reached end for specific feature
 		isLast := currentCount >= totlaCount
@@ -195,11 +196,7 @@ func converGeoJson(c *cli.Context) error {
 		// Ignore if geometry missing
 		var coordinates [][][][]float64
 		if feature.Geometry != nil {
-			coordinates, err = utils.SerializeGeometry(*feature.Geometry)
-			if err != nil {
-				return err
-			}
-
+			coordinates = *feature.Geometry
 			// Fixing invalid polygons
 			if fixAll {
 				coordinates, err = utils.PolygonRepair(coordinates)
@@ -226,7 +223,7 @@ func converGeoJson(c *cli.Context) error {
 		//
 
 		currentCoordinates := make([][][][]float64, 0)
-		if val, ok := pendingFeatures[idValue[0]]; ok {
+		if val, ok := pendingFeatures[primaryID]; ok {
 			currentCoordinates = val
 		}
 
@@ -241,12 +238,12 @@ func converGeoJson(c *cli.Context) error {
 		if !isLast {
 			// Save pending geometry only for primary records
 			if recordType == drivers.Primary {
-				pendingFeatures[idValue[0]] = currentCoordinates
+				pendingFeatures[primaryID] = currentCoordinates
 			}
 			return nil
 		}
-		delete(pendingFeatures, idValue[0])
-		delete(pendingFeaturesCount, idValue[0])
+		delete(pendingFeatures, primaryID)
+		delete(pendingFeaturesCount, primaryID)
 
 		// Loading Extras
 		extras := drivers.NewExtras()
@@ -257,7 +254,7 @@ func converGeoJson(c *cli.Context) error {
 
 		// Preparing Bundle
 		fields := make(map[string]interface{})
-		fields["id"] = idValue[0]
+		fields["id"] = primaryID
 		if len(idValue) > 1 {
 			fields["displayId"] = idValue[1:]
 		}
