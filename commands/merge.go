@@ -84,22 +84,27 @@ func CreateMergeCommands() []cli.Command {
 		{
 			Name:  "merge",
 			Usage: "Merge GeoJSON files",
-			Flags: []cli.Flag{
-				cli.StringSliceFlag{
-					Name:  "source, src",
-					Usage: "Path to dataset",
+			Subcommands: []cli.Command{
+				{
+					Name: "geojson",
+					Flags: []cli.Flag{
+						cli.StringSliceFlag{
+							Name:  "source, src",
+							Usage: "Path to dataset",
+						},
+						cli.StringFlag{
+							Name:  "dest, dst",
+							Usage: "Path to destination file",
+						},
+						cli.BoolFlag{
+							Name:  "force, f",
+							Usage: "Overwrite file if exists",
+						},
+					},
+					Action: func(c *cli.Context) error {
+						return merge(c)
+					},
 				},
-				cli.StringFlag{
-					Name:  "dest, dst",
-					Usage: "Path to destination file",
-				},
-				cli.BoolFlag{
-					Name:  "force, f",
-					Usage: "Overwrite file if exists",
-				},
-			},
-			Action: func(c *cli.Context) error {
-				return merge(c)
 			},
 		},
 	}
