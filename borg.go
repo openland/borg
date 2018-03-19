@@ -20,7 +20,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "borg toolbelt"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
 	app.Usage = "Toolbelt to work with Statecraft API"
 
 	//
