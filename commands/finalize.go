@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/statecrafthq/borg/commands/ops"
 
 	"github.com/statecrafthq/borg/utils"
@@ -37,7 +39,7 @@ func doFinalize(c *cli.Context) error {
 			coords := utils.ParseFloat4(geom.([]interface{}))
 
 			// Repair
-			coords, e := utils.PolygonRepair(coords)
+			repaired, e := utils.PolygonRepair(coords)
 			if e != nil {
 				return nil, e
 			}
@@ -49,9 +51,16 @@ func doFinalize(c *cli.Context) error {
 			coords = ops.OptimizePolygon(coords)
 
 			// Repair again
-			coords, e = utils.PolygonRepair(coords)
+			repairedAgain, e := utils.PolygonRepair(coords)
 			if e != nil {
-				return nil, e
+				fmt.Println(repaired)
+				fmt.Println(coords)
+				fmt.Println(e)
+				// Trying to ignore
+				coords = repaired
+				// return nil, e
+			} else {
+				coords = repairedAgain
 			}
 
 			// Save updated geometry
