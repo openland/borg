@@ -31,6 +31,28 @@ func newYorkBlockID(feature *utils.Feature) ([]string, error) {
 	return formats, nil
 }
 
+func newYorkRecordType(feature *utils.Feature) (RecordType, error) {
+	// Check Geometry
+	if feature.Geometry == nil {
+		return Ignored, nil
+	}
+
+	// Check Id
+	var bbl string
+	switch v := feature.Properties["BBL"].(type) {
+	case string:
+		bbl = v
+	case float64:
+		bbl = strconv.FormatInt(int64(v), 10)
+	default:
+		return Ignored, errors.New("Unsupported BBL value")
+	}
+	if bbl == "2024760045" {
+		return Ignored, nil
+	}
+	return Primary, nil
+}
+
 func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 
 	// Checking fields
@@ -148,5 +170,5 @@ func NewYorkBlocksDriver() Driver {
 
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
-	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
+	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired}
 }
