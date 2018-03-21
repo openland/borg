@@ -2,12 +2,15 @@ package ops
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/statecrafthq/borg/utils"
+	"golang.org/x/sync/semaphore"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -215,5 +218,71 @@ func RecordReader(src string, handler func(row map[string]interface{}) error) er
 			return e
 		}
 	}
+	return nil
+}
+
+func RecordTransformer(src string, dst string, handler func(row map[string]interface{}) (map[string]interface{}, error)) error {
+	dstFile, e := os.Create(dst)
+	defer dstFile.Close()
+	if e != nil {
+		return e
+	}
+	writer := bufio.NewWriter(dstFile)
+	var writerLock sync.Mutex
+	ctx := context.Background()
+	sem := semaphore.NewWeighted(10)
+
+	var perror error
+	e = RecordReader(src, func(row map[string]interface{}) error {
+		if perror != nil {
+			return perror
+		}
+		if e := sem.Acquire(ctx, 1); e != nil {
+			return e
+		}
+		go func() {
+			defer sem.Release(1)
+			c, e := handler(row)
+
+			// Result
+			if e != nil {
+				perror = e
+				return
+			}
+			b, e := json.Marshal(c)
+			if e != nil {
+				perror = e
+				return
+			}
+
+			// Writing
+			writerLock.Lock()
+			defer writerLock.Unlock()
+			_, e = writer.Write(b)
+			if e != nil {
+				perror = e
+				return
+			}
+
+			_, e = writer.WriteString("\n")
+			if e != nil {
+				perror = e
+				return
+			}
+		}()
+		return nil
+	})
+	if perror != nil {
+		return e
+	}
+	if e != nil {
+		return e
+	}
+
+	e = writer.Flush()
+	if e != nil {
+		return e
+	}
+
 	return nil
 }

@@ -1,10 +1,6 @@
 package commands
 
 import (
-	"bufio"
-	"encoding/json"
-	"os"
-
 	"github.com/statecrafthq/borg/commands/ops"
 
 	"github.com/statecrafthq/borg/utils"
@@ -34,13 +30,7 @@ func doFinalize(c *cli.Context) error {
 	// Main Cycle
 	//
 
-	wktOutput, e := os.Create(dst)
-	if e != nil {
-		return e
-	}
-	writer := bufio.NewWriter(wktOutput)
-
-	e = ops.RecordReader(src, func(row map[string]interface{}) error {
+	e = ops.RecordTransformer(src, dst, func(row map[string]interface{}) (map[string]interface{}, error) {
 		if geom, ok := row["geometry"]; ok {
 
 			// Convert types
@@ -49,7 +39,7 @@ func doFinalize(c *cli.Context) error {
 			// Repair
 			coords, e := utils.PolygonRepair(coords)
 			if e != nil {
-				return e
+				return nil, e
 			}
 
 			// Measure area
@@ -61,41 +51,14 @@ func doFinalize(c *cli.Context) error {
 			// Repair again
 			coords, e = utils.PolygonRepair(coords)
 			if e != nil {
-				return e
+				return nil, e
 			}
 
 			// Save updated geometry
 			row["geometry"] = coords
 		}
-
-		// Write result
-
-		b, e := json.Marshal(row)
-		if e != nil {
-			return e
-		}
-
-		_, e = writer.Write(b)
-		if e != nil {
-			return e
-		}
-
-		_, e = writer.WriteString("\n")
-		if e != nil {
-			return e
-		}
-
-		return nil
+		return row, nil
 	})
-	if e != nil {
-		return e
-	}
-
-	//
-	// Tear Down
-	//
-
-	e = writer.Flush()
 	if e != nil {
 		return e
 	}
