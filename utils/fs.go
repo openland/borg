@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/urfave/cli"
 )
 
 func FileExists(name string) bool {
@@ -16,6 +18,21 @@ func FileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+func AssumeNotExists(name string, force bool) error {
+	exist := FileExists(name)
+	if exist {
+		if force {
+			e := os.Remove(name)
+			if e != nil {
+				return e
+			}
+		} else {
+			return cli.NewExitError("File already exists. Use --force for overwriting.", 1)
+		}
+	}
+	return nil
 }
 
 func removeContents(dir string) error {

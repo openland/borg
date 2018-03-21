@@ -168,3 +168,52 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 
 	return nil
 }
+
+func RecordReader(src string, handler func(row map[string]interface{}) error) error {
+	// Opening file
+	file, e := os.Open(src)
+	if e != nil {
+		return e
+	}
+	defer file.Close()
+
+	// Line number
+	lines, e := utils.CountLines(file)
+	if e != nil {
+		return e
+	}
+
+	//
+	// Main loop
+	//
+	bar := pb.StartNew(lines)
+	defer bar.Finish()
+	rd := bufio.NewReader(file)
+
+	//
+	// Main Loop
+	//
+	linesRead := 0
+	for {
+		line, e := rd.ReadBytes('\n')
+		if e != nil {
+			if e == io.EOF {
+				break
+			}
+			return e
+		}
+
+		var d map[string]interface{}
+		e = json.Unmarshal(line, &d)
+		if e != nil {
+			return e
+		}
+		bar.Set(linesRead)
+		linesRead = linesRead + 1
+		e = handler(d)
+		if e != nil {
+			return e
+		}
+	}
+	return nil
+}

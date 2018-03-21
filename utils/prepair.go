@@ -26,7 +26,7 @@ func invokeRepair(src string) (string, error) {
 	return out.String(), nil
 }
 
-func convertToWkt(src [][][][]float64) string {
+func ConvertToWkt(src [][][][]float64) string {
 	res := "MULTIPOLYGON ("
 	isFirstPoly := true
 	for _, poly := range src {
@@ -91,7 +91,7 @@ func splitBrackets(src string) ([]string, error) {
 	return res, nil
 }
 
-func parseWkt(src string) ([][][][]float64, error) {
+func ParseWkt(src string) ([][][][]float64, error) {
 	if !strings.HasPrefix(src, "MULTIPOLYGON") {
 		return [][][][]float64{}, errors.New("String should start from MULTIPOLYGON")
 	}
@@ -134,12 +134,12 @@ func parseWkt(src string) ([][][][]float64, error) {
 }
 
 func PolygonRepair(src [][][][]float64) ([][][][]float64, error) {
-	wkt := convertToWkt(src)
+	wkt := ConvertToWkt(src)
 	res, err := invokeRepair(wkt)
 	if err != nil {
 		return [][][][]float64{}, err
 	}
-	parsed, err := parseWkt(res)
+	parsed, err := ParseWkt(res)
 	if err != nil {
 		return [][][][]float64{}, err
 	}

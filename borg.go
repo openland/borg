@@ -33,6 +33,7 @@ func main() {
 	app.Commands = append(app.Commands, commands.CreateSyncCommands()...)
 	app.Commands = append(app.Commands, commands.CreateMergeCommands()...)
 	app.Commands = append(app.Commands, commands.CreateDiffCommands()...)
+	app.Commands = append(app.Commands, commands.CreateFinalizeCommands()...)
 
 	//
 	// Starting
