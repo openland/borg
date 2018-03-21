@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/statecrafthq/borg/commands/ops"
 	"github.com/statecrafthq/borg/utils"
 )
 
@@ -96,7 +97,7 @@ func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 	return formats, nil
 }
 
-func newYorkParcelExtras(feature *utils.Feature, extras *Extras) error {
+func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	if feature.Properties["ZoneDist1"] != nil ||
 		feature.Properties["ZoneDist2"] != nil ||
 		feature.Properties["ZoneDist3"] != nil ||

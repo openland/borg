@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"github.com/statecrafthq/borg/commands/ops"
 	"github.com/statecrafthq/borg/utils"
 )
 
@@ -8,7 +9,7 @@ import (
 type IDFunction = func(feature *utils.Feature) ([]string, error)
 
 // ExtrasFunction builds extra fields
-type ExtrasFunction func(feature *utils.Feature, extras *Extras) error
+type ExtrasFunction func(feature *utils.Feature, extras *ops.Extras) error
 
 // RecordFunction provides record type for each feature
 type RecordFunction func(feature *utils.Feature) (RecordType, error)
@@ -16,7 +17,7 @@ type RecordFunction func(feature *utils.Feature) (RecordType, error)
 type RetiredFunction func(feature *utils.Feature) (RetiredType, error)
 
 // EmptyExtras is a function for empty extras
-func EmptyExtras(feature *utils.Feature, extras *Extras) error {
+func EmptyExtras(feature *utils.Feature, extras *ops.Extras) error {
 	return nil
 }
 

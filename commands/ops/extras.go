@@ -1,4 +1,4 @@
-package drivers
+package ops
 
 func NewExtras() Extras {
 	return Extras{Enums: []ExtrasEnum{}, Strings: []ExtrasString{}, Floats: []ExtrasFloat{}, Ints: []ExtrasInt{}}

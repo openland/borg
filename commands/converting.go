@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/statecrafthq/borg/commands/drivers"
+	"github.com/statecrafthq/borg/commands/ops"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/urfave/cli"
 	emoji "gopkg.in/kyokomi/emoji.v1"
@@ -252,7 +253,7 @@ func converGeoJson(c *cli.Context) error {
 		delete(pendingFeaturesCount, primaryID)
 
 		// Loading Extras
-		extras := drivers.NewExtras()
+		extras := ops.NewExtras()
 		err = driver.Extras(feature, &extras)
 		if err != nil {
 			return err
