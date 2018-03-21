@@ -12,24 +12,24 @@ import (
 	"github.com/statecrafthq/borg/utils"
 )
 
-func SortFile(src string, dst string) error {
+func SortFile(src string, dst string) (int, error) {
 
 	// Open files
 	srcFile, e := os.Open(src)
 	if e != nil {
-		return e
+		return 0, e
 	}
 	defer srcFile.Close()
 	dstFile, e := os.Create(dst)
 	if e != nil {
-		return e
+		return 0, e
 	}
 	defer dstFile.Close()
 
 	// Preflight configuration
 	totalLines, e := utils.CountLines(srcFile)
 	if e != nil {
-		return e
+		return 0, e
 	}
 	reader := bufio.NewReader(srcFile)
 	writer := bufio.NewWriter(dstFile)
@@ -45,7 +45,7 @@ func SortFile(src string, dst string) error {
 			if e == io.EOF {
 				break
 			}
-			return e
+			return 0, e
 		}
 		linesRead = linesRead + 1
 		bar.Set(linesRead)
@@ -54,16 +54,16 @@ func SortFile(src string, dst string) error {
 		var dst map[string]interface{}
 		e = json.Unmarshal(line, &dst)
 		if e != nil {
-			return e
+			return 0, e
 		}
 		id, ok := dst["id"]
 		if !ok {
-			return errors.New("Unable to find ID field in the dataset")
+			return 0, errors.New("Unable to find ID field in the dataset")
 		}
 		ids := id.(string)
 		_, ok = records[ids]
 		if ok {
-			return errors.New("Duplicate records with id=" + ids)
+			return 0, errors.New("Duplicate records with id=" + ids)
 		}
 		records[ids] = line
 		keys = append(keys, ids)
@@ -78,13 +78,13 @@ func SortFile(src string, dst string) error {
 		record := records[key]
 		_, e := writer.Write(record)
 		if e != nil {
-			return e
+			return 0, e
 		}
 	}
 	e = writer.Flush()
 	if e != nil {
-		return e
+		return 0, e
 	}
 
-	return nil
+	return totalLines, nil
 }

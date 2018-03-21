@@ -162,9 +162,17 @@ func Merge(previous map[string]interface{}, latest map[string]interface{}) (map[
 		}
 	}
 
+	// Retired
+	_, ok1 = previous["retired"]
+	_, ok2 = latest["retired"]
+	// If field is missing in latest and present in previous - forward it
+	if ok1 && !ok2 {
+		res["retired"] = false
+	}
+
 	// Missing keys
 	for k := range previous {
-		if k == "extras" || k == "displayId" {
+		if k == "extras" || k == "displayId" || k == "retired" {
 			continue
 		}
 		_, p := latest[k]

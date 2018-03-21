@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"gopkg.in/kyokomi/emoji.v1"
+
 	"github.com/statecrafthq/borg/commands/ops"
 
 	"github.com/statecrafthq/borg/utils"
@@ -84,7 +86,6 @@ func merge(c *cli.Context) error {
 
 func mergeOls(c *cli.Context) error {
 
-	dst := c.String("dst")
 	latest := c.String("latest")
 	previous := c.String("previous")
 	out := c.String("out")
@@ -99,13 +100,13 @@ func mergeOls(c *cli.Context) error {
 	}
 
 	// Destination
-	exist := utils.FileExists(dst)
-	if dst == "" {
-		return cli.NewExitError("Destination file is not provided", 1)
+	exist := utils.FileExists(out)
+	if out == "" {
+		return cli.NewExitError("Output file is not provided", 1)
 	}
 	if exist {
 		if c.Bool("force") {
-			e := os.Remove(dst)
+			e := os.Remove(out)
 			if e != nil {
 				return e
 			}
@@ -129,10 +130,16 @@ func mergeOls(c *cli.Context) error {
 	// Applying
 	//
 
+	retired := 0
+	active := 0
+	total := 0
+
 	e = ops.DiffReader(previous, latest, func(a *map[string]interface{}, b *map[string]interface{}) error {
+		total++
 		if a != nil && b != nil {
 			// Merging two records
 			merged, e := ops.Merge(*a, *b)
+			active++
 
 			// Writing to file
 			bytes, e := json.Marshal(merged)
@@ -148,6 +155,8 @@ func mergeOls(c *cli.Context) error {
 				return e
 			}
 		} else if a != nil {
+			(*a)["retired"] = true
+			retired++
 			bytes, e := json.Marshal(*a)
 			if e != nil {
 				return e
@@ -161,7 +170,9 @@ func mergeOls(c *cli.Context) error {
 				return e
 			}
 		} else if b != nil {
-			bytes, e := json.Marshal(*a)
+			(*b)["retired"] = false
+			active++
+			bytes, e := json.Marshal(*b)
 			if e != nil {
 				return e
 			}
@@ -184,6 +195,8 @@ func mergeOls(c *cli.Context) error {
 	if e != nil {
 		return e
 	}
+
+	emoji.Printf(":bar_chart: Active %d, Retired %d, Total %d\n", active, retired, total)
 
 	return nil
 }
@@ -226,7 +239,7 @@ func CreateMergeCommands() []cli.Command {
 							Usage: "Path to previous dataset",
 						},
 						cli.StringFlag{
-							Name:  "dest, dst",
+							Name:  "out",
 							Usage: "Path to destination file",
 						},
 						cli.BoolFlag{

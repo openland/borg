@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/cheggaaa/pb"
 	"github.com/statecrafthq/borg/utils"
 )
 
@@ -24,22 +25,22 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 	defer utils.ClearTemp()
 
 	// Sort
-	e = SortFile(a, "./tmp/a.ols")
+	aLines, e := SortFile(a, "./tmp/a.ols")
 	if e != nil {
 		return e
 	}
-	e = SortFile(b, "./tmp/b.ols")
+	bLines, e := SortFile(b, "./tmp/b.ols")
 	if e != nil {
 		return e
 	}
 
 	// Init readers
-	srcFile, e := os.Open("./tmp/src.ols")
+	srcFile, e := os.Open("./tmp/a.ols")
 	if e != nil {
 		return e
 	}
 	defer srcFile.Close()
-	updFile, e := os.Open("./tmp/dst.ols")
+	updFile, e := os.Open("./tmp/b.ols")
 	if e != nil {
 		return e
 	}
@@ -57,8 +58,10 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 	updEOF := false
 	srcReader := bufio.NewReader(srcFile)
 	updReader := bufio.NewReader(updFile)
-
+	read := 0
+	bar := pb.StartNew(aLines + bLines)
 	for {
+		bar.Set(read)
 		if srcLoaded && updLoaded {
 			return errors.New("Invariant broken")
 		}
@@ -73,6 +76,7 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 						return e
 					}
 				} else {
+					read++
 					srcLoaded = true
 					e = json.Unmarshal(line, &srcLine)
 					if e != nil {
@@ -91,6 +95,7 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 						return e
 					}
 				} else {
+					read++
 					updLoaded = true
 					e = json.Unmarshal(line, &updLine)
 					if e != nil {
@@ -158,6 +163,8 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 			}
 		}
 	}
+
+	bar.Finish()
 
 	return nil
 }

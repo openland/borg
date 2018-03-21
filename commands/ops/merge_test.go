@@ -76,6 +76,22 @@ func TestBasicExtrasMerge(t *testing.T) {
 		`{"extras": {"ints":[{"key": "key_1", "value": 123 }]}}`)
 }
 
+func TestRetiredMerge(t *testing.T) {
+	// If current retired status is unknown expect it to be active
+	assert(t, `{"retired": true}`, `{}`, `{"retired": false}`)
+	assert(t, `{"retired": false}`, `{}`, `{"retired": false}`)
+
+	// If current retired status is true - preserve it
+	assert(t, `{"retired": false}`, `{"retired": true}`, `{"retired": true}`)
+	assert(t, `{"retired": true}`, `{"retired": true}`, `{"retired": true}`)
+	assert(t, `{}`, `{"retired": true}`, `{"retired": true}`)
+
+	// If current retired status is false - preserve it
+	assert(t, `{"retired": true}`, `{"retired": false}`, `{"retired": false}`)
+	assert(t, `{"retired": false}`, `{"retired": false}`, `{"retired": false}`)
+	assert(t, `{}`, `{"retired": false}`, `{"retired": false}`)
+}
+
 func TestUnknownFieldsMerge(t *testing.T) {
 	assert(t, `{"something": ["123"]}`, `{}`, `{"something": ["123"]}`)
 	assert(t, `{}`, `{"something": ["123"]}`, `{"something": ["123"]}`)
