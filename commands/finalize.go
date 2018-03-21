@@ -41,26 +41,27 @@ func doFinalize(c *cli.Context) error {
 			// Repair
 			repaired, e := utils.PolygonRepair(coords)
 			if e != nil {
-				return nil, e
-			}
-
-			// Measure area
-			// areas = append(areas, utils.MeasureArea(coords))
-
-			// Optimize
-			coords = ops.OptimizePolygon(coords)
-
-			// Repair again
-			repairedAgain, e := utils.PolygonRepair(coords)
-			if e != nil {
-				fmt.Println(repaired)
-				fmt.Println(coords)
+				fmt.Println(row)
 				fmt.Println(e)
-				// Trying to ignore
-				coords = repaired
-				// return nil, e
 			} else {
-				coords = repairedAgain
+				coords = repaired
+
+				// Measure area
+				// areas = append(areas, utils.MeasureArea(coords))
+
+				// Optimize
+				coords = ops.OptimizePolygon(coords)
+
+				// Repair again
+				repairedAgain, e := utils.PolygonRepair(coords)
+				if e != nil {
+					fmt.Println(row)
+					fmt.Println(repaired)
+					fmt.Println(coords)
+					fmt.Println(e)
+				} else {
+					coords = repairedAgain
+				}
 			}
 
 			// Save updated geometry
