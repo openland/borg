@@ -8,8 +8,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/cheggaaa/pb"
 	"github.com/statecrafthq/borg/utils"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func SortFile(src string, dst string) (int, error) {

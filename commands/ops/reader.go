@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/cheggaaa/pb"
 	"github.com/statecrafthq/borg/utils"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *map[string]interface{}) error) error {
