@@ -29,17 +29,12 @@ func doFinalize(c *cli.Context) error {
 	if e != nil {
 		return e
 	}
-	e = utils.PrepareTemp()
-	if e != nil {
-		return e
-	}
-	// defer utils.ClearTemp()
 
 	//
 	// Main Cycle
 	//
 
-	wktOutput, e := os.Create("tmp/raw.wkt")
+	wktOutput, e := os.Create(dst)
 	if e != nil {
 		return e
 	}
