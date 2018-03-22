@@ -47,7 +47,7 @@ func newYorkRecordType(feature *utils.Feature) (RecordType, error) {
 	default:
 		return Ignored, errors.New("Unsupported BBL value")
 	}
-	if bbl == "2024760045" {
+	if bbl == "2024760045" || bbl == "2026230616" || bbl == "2028440048" || bbl == "2050100175" || bbl == "2054080138" || bbl == "2057560239" {
 		return Ignored, nil
 	}
 	return Primary, nil
@@ -156,6 +156,25 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	}
 	if feature.Properties["OwnerName"] != nil {
 		extras.AppendString("owner_name", feature.Properties["OwnerName"].(string))
+	}
+	if feature.Properties["OwnerType"] != nil {
+
+		if feature.Properties["OwnerType"] == "C" {
+			extras.AppendString("owner_type", "CITY")
+		}
+		if feature.Properties["OwnerType"] == "M" {
+			extras.AppendString("owner_type", "MIXED")
+		}
+		if feature.Properties["OwnerType"] == "P" {
+			extras.AppendString("owner_type", "PRIVATE")
+		}
+
+		if feature.Properties["OwnerType"] == "O" {
+			extras.AppendString("owner_type", "OTHER")
+		}
+		if feature.Properties["OwnerType"] == "X" {
+			extras.AppendString("owner_type", "EXCLUDED")
+		}
 	}
 	if feature.Properties["AssessLand"] != nil {
 		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
