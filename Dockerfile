@@ -53,7 +53,8 @@ RUN go get \
     gopkg.in/cheggaaa/pb.v1 \
     cloud.google.com/go/storage \
     golang.org/x/sync/semaphore \
-    github.com/stretchr/testify
+    github.com/stretchr/testify \
+    github.com/umahmood/haversine
 
 # Building Go
 RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go test ./... && go build && mv borg /usr/bin/
