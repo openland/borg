@@ -34,6 +34,7 @@ func main() {
 	app.Commands = append(app.Commands, commands.CreateMergeCommands()...)
 	app.Commands = append(app.Commands, commands.CreateDiffCommands()...)
 	app.Commands = append(app.Commands, commands.CreateFinalizeCommands()...)
+	app.Commands = append(app.Commands, commands.CreateAnalyzeCommands()...)
 
 	//
 	// Starting
