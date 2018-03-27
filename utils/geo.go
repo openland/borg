@@ -10,8 +10,11 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/twpayne/go-geom"
 	enc "github.com/twpayne/go-geom/encoding/geojson"
+	"github.com/umahmood/haversine"
 	"gopkg.in/cheggaaa/pb.v1"
 )
+
+const WORLD_RADIUS = 6378137
 
 func serializeCoord(coord geom.Coord) []float64 {
 	return []float64{coord[0], coord[1]}
@@ -244,7 +247,7 @@ func measureRingArea(coords [][]float64) float64 {
 		}
 
 		// wgs84.RADIUS = 6378137
-		area = area * 6378137 * 6378137 / 2
+		area = area * WORLD_RADIUS * WORLD_RADIUS / 2
 	}
 
 	return area
@@ -261,4 +264,11 @@ func MeasureArea(src [][][][]float64) float64 {
 		}
 	}
 	return res
+}
+
+func MeasureGreatCircleDistance(a []float64, b []float64) float64 {
+	oxford := haversine.Coord{Lat: a[1], Lon: a[0]}
+	turin := haversine.Coord{Lat: b[1], Lon: b[0]}
+	_, km := haversine.Distance(oxford, turin)
+	return km * 1000
 }

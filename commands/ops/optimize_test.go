@@ -27,6 +27,6 @@ func TestSimplify(t *testing.T) {
 		t.Error("First and last points doesn't match!")
 	}
 
-	t.Log(coords)
-	t.Log(optimized)
+	// t.Log(coords)
+	// t.Log(optimized)
 }
