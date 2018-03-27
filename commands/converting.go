@@ -330,7 +330,7 @@ func CreateConvertingCommands() []cli.Command {
 				},
 				{
 					Name:  "geojson",
-					Usage: "Converting GeoJSON to jsvc file for Openland importing",
+					Usage: "Converting GeoJSON to ols file",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "source, src",

@@ -98,7 +98,7 @@ func mergeExtrasType(a interface{}, b interface{}) []interface{} {
 	return res
 }
 
-func mergeExtras(a map[string]interface{}, b map[string]interface{}) (map[string]interface{}, error) {
+func MergeExtras(a map[string]interface{}, b map[string]interface{}) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
 	if a["floats"] != nil || b["floats"] != nil {
 		res["floats"] = mergeExtrasType(a["floats"], b["floats"])
@@ -152,7 +152,7 @@ func Merge(previous map[string]interface{}, latest map[string]interface{}) (map[
 	ex2, ok2 := latest["extras"]
 	if ok1 {
 		if ok2 {
-			r, e := mergeExtras(ex1.(map[string]interface{}), ex2.(map[string]interface{}))
+			r, e := MergeExtras(ex1.(map[string]interface{}), ex2.(map[string]interface{}))
 			if e != nil {
 				return nil, e
 			}

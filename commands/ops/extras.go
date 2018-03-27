@@ -1,5 +1,26 @@
 package ops
 
+import (
+	"encoding/json"
+)
+
+func LoadExtras(src interface{}) (*Extras, error) {
+	if src == nil {
+		ex := NewExtras()
+		return &ex, nil
+	}
+	d, e := json.Marshal(src)
+	if e != nil {
+		return nil, e
+	}
+	var res Extras
+	e = json.Unmarshal(d, &res)
+	if e != nil {
+		return nil, e
+	}
+	return &res, nil
+}
+
 func NewExtras() Extras {
 	return Extras{Enums: []ExtrasEnum{}, Strings: []ExtrasString{}, Floats: []ExtrasFloat{}, Ints: []ExtrasInt{}}
 }
