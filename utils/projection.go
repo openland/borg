@@ -106,10 +106,12 @@ func (proj *Projection) UnprojectPoint(point []float64) []float64 {
 	// Rotate coorinates back
 	//
 
-	// Rotate around vertical axis (Z)
-	rotated := RotateZ([]float64{0, point[0], point[1]}, proj.sinNLon, proj.cosNLon)
+	rotated := []float64{0, point[0], point[1]}
+
 	// Rotsate around horizontal axis (Y)
 	rotated = RotateY(rotated, proj.sinNLat, proj.cosNLat)
+	// Rotate around vertical axis (Z)
+	rotated = RotateZ([]float64{0, point[0], point[1]}, proj.sinNLon, proj.cosNLon)
 
 	//
 	// Shift center back

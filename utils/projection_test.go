@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -41,6 +42,22 @@ func TestMultipolyProject(t *testing.T) {
 		assert.InEpsilon(t, polys[0][0][i][0], unproj[0][0][i][0], 0.00001)
 		assert.InEpsilon(t, polys[0][0][i][1], unproj[0][0][i][1], 0.00001)
 	}
+}
+
+func TestOrientation(t *testing.T) {
+	polys := [][][][]float64{[][][]float64{[][]float64{
+		{-73.989006, 40.715406},
+		{-73.988713, 40.715975},
+		{-73.989045, 40.716081},
+		{-73.98895, 40.716277},
+		{-73.989187, 40.716347},
+		{-73.989584, 40.71558},
+		{-73.989006, 40.715406},
+	}}}
+	proj := NewProjection(polys)
+	res := proj.ProjectMultiPolygon(polys)
+	fmt.Println(polys)
+	fmt.Println(DebugMultiPolygon(res))
 }
 
 func TestPointProject(t *testing.T) {

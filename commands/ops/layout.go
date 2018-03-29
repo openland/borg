@@ -43,7 +43,10 @@ func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layou
 		large := math.Max((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
 
 		if small > smallSide && large > largeSide {
-			return Layout{Analyzed: true, Fits: true, HasLocation: true, Center: []float64{center.X, center.Y}, Angle: mainAngle}
+			return Layout{
+				Analyzed: true, Fits: true, HasLocation: true,
+				Center: []float64{center.X, center.Y},
+				Angle:  mainAngle}
 		}
 		return Layout{Analyzed: true, Fits: false}
 	}
