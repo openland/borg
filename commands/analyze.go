@@ -123,8 +123,9 @@ func analyzeDataset(c *cli.Context) error {
 				extras.AppendString("project_kassita1", "true")
 				if kassita1.HasLocation {
 					extras.AppendFloat("project_kassita1_angle", kassita1.Angle)
-					extras.AppendFloat("project_kassita1_lon", kassita1.Center[0])
-					extras.AppendFloat("project_kassita1_lat", kassita1.Center[1])
+					center := proj.UnprojectPoint(kassita1.Center)
+					extras.AppendFloat("project_kassita1_lon", center[0])
+					extras.AppendFloat("project_kassita1_lat", center[1])
 				}
 			} else {
 				extras.AppendString("project_kassita1", "false")
@@ -134,8 +135,9 @@ func analyzeDataset(c *cli.Context) error {
 				extras.AppendString("project_kassita2", "true")
 				if kassita2.HasLocation {
 					extras.AppendFloat("project_kassita2_angle", kassita2.Angle)
-					extras.AppendFloat("project_kassita2_lon", kassita2.Center[0])
-					extras.AppendFloat("project_kassita2_lat", kassita2.Center[1])
+					center := proj.UnprojectPoint(kassita2.Center)
+					extras.AppendFloat("project_kassita2_lon", center[0])
+					extras.AppendFloat("project_kassita2_lat", center[1])
 				}
 			} else {
 				extras.AppendString("project_kassita2", "false")
