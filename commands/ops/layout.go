@@ -31,8 +31,9 @@ func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layou
 		center := utils.FindCenter(polys)
 		side1 := (sides[0] + sides[2]) / 2
 		side2 := (sides[1] + sides[3]) / 2
-		angle1 := (utils.GlobalAngle(poly[0], poly[1]) - utils.GlobalAngle(poly[2], poly[3])) / 2
-		angle2 := (utils.GlobalAngle(poly[1], poly[2]) - utils.GlobalAngle(poly[3], poly[4])) / 2
+		// Second side is inverted to make them aligned
+		angle1 := (utils.GlobalAngle(poly[0], poly[1]) + utils.GlobalAngle(poly[3], poly[2])) / 2
+		angle2 := (utils.GlobalAngle(poly[1], poly[2]) + utils.GlobalAngle(poly[4], poly[3])) / 2
 		var mainAngle float64
 		if side1 > side2 {
 			mainAngle = angle1
