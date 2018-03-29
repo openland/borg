@@ -15,7 +15,7 @@ func TestBounds(t *testing.T) {
 	assert.Equal(t, 1.0, bounds.MaxY)
 }
 
-func TestProject(t *testing.T) {
+func TestMultipolyProject(t *testing.T) {
 	polys := [][][][]float64{[][][]float64{[][]float64{
 		{-73.996005, 40.722822},
 		{-73.995979, 40.722887},
@@ -23,7 +23,8 @@ func TestProject(t *testing.T) {
 		{-73.996362, 40.722895},
 		{-73.996005, 40.722822},
 	}}}
-	res := ProjectToPlane(polys)
+	proj := NewProjection(polys)
+	res := proj.ProjectMultiPolygon(polys)
 	assert.InEpsilon(t, 13.962607, res[0][0][0][0], 0.00001)
 	assert.InEpsilon(t, -7.681031, res[0][0][0][1], 0.00001)
 	assert.InEpsilon(t, 16.156113, res[0][0][1][0], 0.00001)
@@ -34,6 +35,30 @@ func TestProject(t *testing.T) {
 	assert.InEpsilon(t, 0.445296, res[0][0][3][1], 0.00001)
 	assert.Equal(t, res[0][0][0][0], res[0][0][4][0])
 	assert.Equal(t, res[0][0][0][1], res[0][0][4][1])
+
+	unproj := proj.UnprojectMultiPolygon(res)
+	for i := 0; i < 4; i++ {
+		assert.InEpsilon(t, polys[0][0][i][0], unproj[0][0][i][0], 0.00001)
+		assert.InEpsilon(t, polys[0][0][i][1], unproj[0][0][i][1], 0.00001)
+	}
+}
+
+func TestPointProject(t *testing.T) {
+	polys := [][][][]float64{[][][]float64{[][]float64{
+		{-73.996005, 40.722822},
+		{-73.995979, 40.722887},
+		{-73.996336, 40.72296},
+		{-73.996362, 40.722895},
+		{-73.996005, 40.722822},
+	}}}
+	proj := NewProjection(polys)
+	point := proj.ProjectPoint([]float64{-73.996005, 40.722822})
+	assert.InEpsilon(t, 13.962607, point[0], 0.00001)
+	assert.InEpsilon(t, -7.681031, point[1], 0.00001)
+
+	unp := proj.UnprojectPoint(point)
+	assert.InEpsilon(t, -73.996005, unp[0], 0.000005)
+	assert.InEpsilon(t, 40.722822, unp[1], 0.000005)
 }
 
 func TestDistance(t *testing.T) {
@@ -42,8 +67,18 @@ func TestDistance(t *testing.T) {
 }
 
 func TestPointProjection(t *testing.T) {
+
+	// Forward test (should preserve almost same distance as GreatCircleDistance)
 	point1 := ProjectToCartesian([]float64{-73.996005, 40.722822})
 	point2 := ProjectToCartesian([]float64{-73.995979, 40.722887})
 	res := math.Sqrt((point1[0]-point2[0])*(point1[0]-point2[0]) + (point1[1]-point2[1])*(point1[1]-point2[1]) + (point1[2]-point2[2])*(point1[2]-point2[2]))
 	assert.Equal(t, 7.5609426673747056, res) // Almost same as test above (should be a little bit bigger)
+
+	// Check reverse conversion
+	point1u := UnprojectFromCartesian(point1)
+	point2u := UnprojectFromCartesian(point2)
+	assert.InEpsilon(t, -73.996005, point1u[0], 0.000001)
+	assert.InEpsilon(t, 40.722822, point1u[1], 0.000001)
+	assert.InEpsilon(t, -73.995979, point2u[0], 0.000001)
+	assert.InEpsilon(t, 40.722887, point2u[1], 0.000001)
 }

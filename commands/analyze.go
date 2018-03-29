@@ -46,9 +46,8 @@ func analyzeDataset(c *cli.Context) error {
 		}
 		if geometry, ok := row["geometry"]; ok {
 			coords := utils.ParseFloat4(geometry.([]interface{}))
-
-			// Project and convert to meters
-			projected := utils.ProjectToPlane(coords)
+			proj := utils.NewProjection(coords)
+			projected := proj.ProjectMultiPolygon(coords)
 
 			// Classificator
 			t := ops.ClassifyParcelGeometry(projected)
@@ -58,82 +57,90 @@ func analyzeDataset(c *cli.Context) error {
 				notAnalyzed++
 
 				extras.AppendString("shape_type", "miltipolygon")
-				extras.AppendString("analyzed", "false")
 			} else if t == ops.TypeComplexPolygon {
 				notConvex++
 				notAnalyzed++
 
 				extras.AppendString("shape_type", "complex")
-				extras.AppendString("analyzed", "false")
 			} else if t == ops.TypePolygonWithHoles {
 				withHolesCount++
 				notConvex++
 				notAnalyzed++
 
-				extras.AppendString("shape_type", "convex")
-				extras.AppendString("analyzed", "false")
+				extras.AppendString("shape_type", "complex")
 			} else if t == ops.TypeTriangle {
 				trianglesCount++
 
 				// Upgrade field data
 				sides := utils.GetSides(projected[0][0])
 				extras.AppendString("shape_type", "triangle")
-				extras.AppendString("analyzed", "false")
 				extras.AppendFloat("side1", sides[0])
 				extras.AppendFloat("side2", sides[1])
 				extras.AppendFloat("side3", sides[2])
 			} else if t == ops.TypeRectangle {
 				rectangleCount++
 				fourPointCount++
-
 				// Upgrade field data
 				sides := utils.GetSides(projected[0][0])
 				small := math.Min((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
 				large := math.Max((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
 				extras.AppendString("shape_type", "rectangle")
-				extras.AppendString("analyzed", "true")
 				extras.AppendFloat("side1", large)
 				extras.AppendFloat("side2", small)
-
-				// Check Kassitas
-				// Element1: 12ft x 35ft (3.6576 x 10.668)
-				// Element2: 10ft x 35ft (3.048  x 12.192)
-
-				// Element 1
-				if small > 3.6576 && large > 10.668 {
-					extras.AppendString("project_kassita1", "true")
-				} else {
-					extras.AppendString("project_kassita1", "false")
-				}
-
-				// Element 2
-				if small > 3.048 && large > 12.192 {
-					extras.AppendString("project_kassita2", "true")
-				} else {
-					extras.AppendString("project_kassita2", "false")
-				}
-
 			} else if t == ops.TypeQuadriliteral {
 				fourPointCount++
-
 				// Upgrade field data
 				sides := utils.GetSides(projected[0][0])
 				extras.AppendString("shape_type", "quadriliteral")
-				extras.AppendString("analyzed", "false")
 				extras.AppendFloat("side1", sides[0])
 				extras.AppendFloat("side2", sides[1])
 				extras.AppendFloat("side3", sides[2])
 				extras.AppendFloat("side4", sides[3])
 			} else if t == ops.TypeConvexPolygon {
 				notAnalyzed++
-
 				extras.AppendString("shape_type", "convex")
-				extras.AppendString("analyzed", "false")
 			} else if t == ops.TypeBroken {
 				emptyCount++
 				extras.AppendString("shape_type", "broken")
+			}
+
+			//
+			// Building Fitting
+			//
+
+			// Kassita-1: 12ft x 35ft (3.6576 x 10.668)
+			// Kassita-2: 10ft x 35ft (3.048  x 12.192)
+			kassita1 := ops.LayoutRectangle(projected, 3.6576, 10.668)
+			kassita2 := ops.LayoutRectangle(projected, 3.048, 12.192)
+
+			if kassita1.Analyzed || kassita2.Analyzed {
+				extras.AppendString("analyzed", "true")
+			} else {
 				extras.AppendString("analyzed", "false")
 			}
+
+			if kassita1.Analyzed && kassita1.Fits {
+				extras.AppendString("project_kassita1", "true")
+				if kassita1.HasLocation {
+					extras.AppendFloat("project_kassita1_angle", kassita1.Angle)
+					extras.AppendFloat("project_kassita1_lon", kassita1.Center[0])
+					extras.AppendFloat("project_kassita1_lat", kassita1.Center[1])
+				}
+			} else {
+				extras.AppendString("project_kassita1", "false")
+			}
+
+			if kassita2.Analyzed && kassita2.Fits {
+				extras.AppendString("project_kassita2", "true")
+				if kassita2.HasLocation {
+					extras.AppendFloat("project_kassita2_angle", kassita2.Angle)
+					extras.AppendFloat("project_kassita2_lon", kassita2.Center[0])
+					extras.AppendFloat("project_kassita2_lat", kassita2.Center[1])
+				}
+			} else {
+				extras.AppendString("project_kassita2", "false")
+			}
+
 		} else {
 			emptyCount++
 

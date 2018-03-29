@@ -4,6 +4,24 @@ import (
 	"math"
 )
 
+type Point struct {
+	X float64
+	Y float64
+}
+
+type Bounds struct {
+	MinX float64
+	MinY float64
+	MaxX float64
+	MaxY float64
+}
+
+type Point3d struct {
+	X float64
+	Y float64
+	Z float64
+}
+
 func vectorAngle(point1 []float64, point2 []float64, point3 []float64) float64 {
 	dx1 := point2[0] - point1[0]
 	dy1 := point2[1] - point1[1]
@@ -39,4 +57,66 @@ func GetSides(line [][]float64) []float64 {
 		res = append(res, l)
 	}
 	return res
+}
+
+func FindBounds(coords [][][][]float64) Bounds {
+	maxX := -math.MaxFloat64
+	minX := math.MaxFloat64
+	maxY := -math.MaxFloat64
+	minY := math.MaxFloat64
+	for _, poly := range coords {
+		for _, circle := range poly {
+			for _, point := range circle {
+				if point[0] > maxX {
+					maxX = point[0]
+				}
+				if point[0] < minX {
+					minX = point[0]
+				}
+				if point[1] > maxY {
+					maxY = point[1]
+				}
+				if point[1] < minY {
+					minY = point[1]
+				}
+			}
+		}
+	}
+	return Bounds{MinX: minX, MaxX: maxX, MinY: minY, MaxY: maxY}
+}
+
+func FindCenter(coords [][][][]float64) Point {
+	bounds := FindBounds(coords)
+	return Point{X: (bounds.MaxX + bounds.MinX) / 2, Y: (bounds.MaxY + bounds.MinY) / 2}
+}
+
+func IsPointInside(point []float64, polygon [][]float64) bool {
+
+	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+	// https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon/17490923#17490923
+
+	isInside := false
+	i := 0
+	j := len(polygon) - 1
+	for {
+
+		// Do not touch!
+		if ((polygon[i][1] > point[1]) != (polygon[j][1] > point[1])) &&
+			(point[0] < (polygon[j][0]-polygon[i][0])*(point[1]-polygon[i][1])/(polygon[j][1]-polygon[i][1])+polygon[i][0]) {
+			isInside = !isInside
+		}
+
+		// Is there a bettter way to write this for loop?
+		i++
+		j = i
+		if j >= len(polygon) {
+			break
+		}
+	}
+
+	return isInside
+}
+
+func GlobalAngle(a, b []float64) float64 {
+	return math.Atan2(b[0]-a[0], b[1]-a[1])
 }

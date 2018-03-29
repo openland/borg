@@ -278,6 +278,10 @@ func RecordTransformer(src string, dst string, handler func(row map[string]inter
 	if e != nil {
 		return e
 	}
+	if e := sem.Acquire(ctx, 10); e != nil {
+		return e
+	}
+	writerLock.Lock()
 
 	e = writer.Flush()
 	if e != nil {

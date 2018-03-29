@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +25,7 @@ func TestAngles(t *testing.T) {
 	}
 
 	// Random complex polygon from NYC
-	irregular := ProjectToPlane([][][][]float64{[][][]float64{[][]float64{
+	nycParcel := [][][][]float64{[][][]float64{[][]float64{
 		{-74.00591, 40.719953},
 		{-74.005984, 40.719981},
 		{-74.005982, 40.719993},
@@ -32,7 +33,8 @@ func TestAngles(t *testing.T) {
 		{-74.006066, 40.719962},
 		{-74.005942, 40.719912},
 		{-74.00591, 40.719953},
-	}}})
+	}}}
+	irregular := NewProjection(nycParcel).ProjectMultiPolygon(nycParcel)
 
 	res = GetAngles(irregular[0][0])
 
@@ -52,4 +54,19 @@ func TestSides(t *testing.T) {
 	assert.InEpsilon(t, 6.7434, res[1], 0.0001)
 	assert.InEpsilon(t, 16.2328, res[2], 0.0001)
 	assert.InEpsilon(t, 6.6481, res[3], 0.0001)
+}
+
+func TestGlobalAngle(t *testing.T) {
+
+	// 45 degres angle
+	angle := GlobalAngle([]float64{0, 0}, []float64{1, 1})
+	assert.InEpsilon(t, math.Pi/4, angle, 0.000001)
+	angle = GlobalAngle([]float64{1, 1}, []float64{2, 2})
+	assert.InEpsilon(t, math.Pi/4, angle, 0.000001)
+
+	// -45 degres angle
+	angle = GlobalAngle([]float64{0, 0}, []float64{-1, 1})
+	assert.InEpsilon(t, -math.Pi/4, angle, 0.000001)
+	angle = GlobalAngle([]float64{1, 1}, []float64{0, 2})
+	assert.InEpsilon(t, -math.Pi/4, angle, 0.000001)
 }
