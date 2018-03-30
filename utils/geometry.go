@@ -59,6 +59,14 @@ func GetSides(line [][]float64) []float64 {
 	return res
 }
 
+func GetSideGlobalAngles(line [][]float64) []float64 {
+	res := make([]float64, 0)
+	for i := 0; i < len(line)-1; i++ {
+		res = append(res, GlobalAngle(line[i], line[i+1]))
+	}
+	return res
+}
+
 func FindBounds(coords [][][][]float64) Bounds {
 	maxX := -math.MaxFloat64
 	minX := math.MaxFloat64
@@ -90,15 +98,24 @@ func FindCenter(coords [][][][]float64) Point {
 	return Point{X: (bounds.MaxX + bounds.MinX) / 2, Y: (bounds.MaxY + bounds.MinY) / 2}
 }
 
+func IsPointsInside(points [][]float64, polygon [][]float64) bool {
+	for _, p := range points {
+		if !IsPointInside(p, polygon) {
+			return false
+		}
+	}
+	return true
+}
+
 func IsPointInside(point []float64, polygon [][]float64) bool {
 
 	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 	// https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon/17490923#17490923
+	// https://github.com/JamesMilnerUK/pip-go/blob/master/pip.go
 
 	isInside := false
-	i := 0
-	j := len(polygon) - 1
-	for {
+	j := 0
+	for i := 1; i < len(polygon); i++ {
 
 		// Do not touch!
 		if ((polygon[i][1] > point[1]) != (polygon[j][1] > point[1])) &&
@@ -106,12 +123,7 @@ func IsPointInside(point []float64, polygon [][]float64) bool {
 			isInside = !isInside
 		}
 
-		// Is there a bettter way to write this for loop?
-		i++
 		j = i
-		if j >= len(polygon) {
-			break
-		}
 	}
 
 	return isInside
@@ -119,4 +131,22 @@ func IsPointInside(point []float64, polygon [][]float64) bool {
 
 func GlobalAngle(a, b []float64) float64 {
 	return math.Atan2(b[0]-a[0], b[1]-a[1])
+}
+
+func Rotate2D(points [][]float64, angle float64) [][]float64 {
+	res := make([][]float64, 0)
+	for _, p := range points {
+		l := math.Sqrt(p[0]*p[0] + p[1]*p[1])
+		a := math.Atan2(p[0], p[1]) + angle
+		res = append(res, []float64{math.Sin(a) * l, math.Cos(a) * l})
+	}
+	return res
+}
+
+func Shift2D(points [][]float64, shift []float64) [][]float64 {
+	res := make([][]float64, 0)
+	for _, p := range points {
+		res = append(res, []float64{p[0] + shift[0], p[1] + shift[1]})
+	}
+	return res
 }

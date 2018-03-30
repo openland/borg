@@ -86,3 +86,16 @@ func TestGlobalAngle(t *testing.T) {
 	angle = GlobalAngle([]float64{1, 1}, []float64{0, 2})
 	assert.InEpsilon(t, -math.Pi/4, angle, 0.000001)
 }
+
+func TestPointTest(t *testing.T) {
+	// WP notes a ray passing through a "side" vertex is an interesting test case.
+	// The test case selected for ExampleXY shows the function working properly
+	// in this case.
+	res := IsPointInside([]float64{1, 1}, [][]float64{{0, 0}, {0, 2}, {2, 1}})
+	assert.Equal(t, true, res)
+
+	// Some random polygon
+	poly := [][]float64{{17.926384, -31.113776}, {35.388660, -3.729118}, {-18.263668, 31.113820}, {-35.388622, 4.174565}, {-9.068620, -13.525313}}
+	res = IsPointInside([]float64{0, 0}, poly)
+	assert.Equal(t, true, res)
+}
