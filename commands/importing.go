@@ -104,7 +104,7 @@ func doQuery(c *cli.Context, streaming bool) error {
 		//
 
 		bar := pb.StartNew(lines)
-		pending := make([]interface{}, 0)
+		pending := make([]map[string]interface{}, 0)
 
 		rd := bufio.NewReader(file)
 		linesRead := 0
@@ -117,11 +117,23 @@ func doQuery(c *cli.Context, streaming bool) error {
 				return e
 			}
 
-			var d interface{}
+			var d map[string]interface{}
 			e = json.Unmarshal(line, &d)
 			if e != nil {
 				return e
 			}
+
+			// Cleanup metadata fields: everything that starts with "$"
+			toRemove := make([]string, 0)
+			for k := range d {
+				if strings.HasPrefix(k, "$") {
+					toRemove = append(toRemove, k)
+				}
+			}
+			for k := range toRemove {
+				delete(d, toRemove[k])
+			}
+
 			pending = append(pending, d)
 			linesRead = linesRead + 1
 			bar.Set(linesRead)
@@ -143,7 +155,7 @@ func doQuery(c *cli.Context, streaming bool) error {
 						return e
 					}
 				}
-				pending = make([]interface{}, 0)
+				pending = make([]map[string]interface{}, 0)
 			}
 		}
 		if len(pending) >= batchSize {

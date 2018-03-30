@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -40,6 +41,21 @@ func TestAngles(t *testing.T) {
 
 	// One angle should be negative as it is a complex polygon
 	assert.InEpsilon(t, -70, res[0], 0.1)
+
+	// [-73.951173,40.703062],[-73.951159,40.70307],[-73.95109,40.703115]]]]
+	poly2 := [][][][]float64{[][][]float64{[][]float64{
+		{-73.95109, 40.703115},
+		{-73.951331, 40.70333},
+		{-73.951413, 40.703276},
+		{-73.951173, 40.703062},
+		{-73.951159, 40.70307},
+		{-73.95109, 40.703115},
+	}}}
+
+	proj := NewProjection(poly2)
+	poly3 := proj.ProjectMultiPolygon(poly2)
+	res = GetAngles(poly3[0][0])
+	fmt.Println(res)
 }
 
 func TestSides(t *testing.T) {
