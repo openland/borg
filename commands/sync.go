@@ -2,108 +2,18 @@ package commands
 
 import (
 	"context"
-	"errors"
-	"io"
-	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"regexp"
 	"time"
 
+	"github.com/statecrafthq/borg/commands/ops"
 	"github.com/statecrafthq/borg/utils"
 
 	"github.com/urfave/cli"
 
-	"encoding/json"
-
 	"cloud.google.com/go/storage"
 )
-
-type CurrentSyncStatus struct {
-	Hash   string `json:"hash"`
-	Latest string `json:"latest"`
-}
-
-func readStatus(ctx context.Context, bucket *storage.BucketHandle, name string) (*CurrentSyncStatus, error) {
-	currentName := "imports/" + name + "/CURRENT"
-	reader, err := bucket.Object(currentName).NewReader(ctx)
-	if err != nil {
-		if err.Error() != "storage: object doesn't exist" {
-			return nil, err
-		}
-		return nil, nil
-	}
-	defer reader.Close()
-	ex, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	res := &CurrentSyncStatus{}
-	err = json.Unmarshal(ex, res)
-	if err == nil {
-		return res, nil
-	}
-	return nil, err
-}
-
-func writeStatus(ctx context.Context, bucket *storage.BucketHandle, name string, hash string, fileName string) error {
-	currentName := "imports/" + name + "/CURRENT"
-	writer := bucket.Object(currentName).NewWriter(ctx)
-	state := &CurrentSyncStatus{Hash: hash, Latest: fileName}
-	data, err := json.Marshal(state)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(data)
-	if err != nil {
-		return err
-	}
-	err = writer.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func uploadFile(ctx context.Context, bucket *storage.BucketHandle, name string, fileName string, src string) error {
-	writer := bucket.Object("imports/" + name + "/" + fileName).NewWriter(ctx)
-	file, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(writer, file)
-	if err != nil {
-		return err
-	}
-	return writer.Close()
-}
-
-func downloadFile(ctx context.Context, bucket *storage.BucketHandle, name string, status CurrentSyncStatus, dst string) error {
-	reader, err := bucket.Object("imports/" + name + "/" + status.Latest).NewReader(ctx)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-	file, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(file, reader)
-	if err != nil {
-		return err
-	}
-	hash, err := utils.SHA256File(dst)
-	if err != nil {
-		return err
-	}
-	if status.Hash != hash {
-		return errors.New("Broken file")
-	}
-	return nil
-}
 
 func sync(c *cli.Context) error {
 	file := c.String("file")
@@ -134,7 +44,7 @@ func sync(c *cli.Context) error {
 	bucket := client.Bucket("data.openland.com")
 
 	// Loading latest state
-	status, err := readStatus(ctx, bucket, name)
+	status, err := ops.ReadStatus(ctx, bucket, name)
 	if err != nil {
 		return err
 	}
@@ -155,13 +65,13 @@ func sync(c *cli.Context) error {
 	log.Println("Dataset was changed")
 	ext := filepath.Ext(file)
 	fname := name + "_" + (time.Now().Format("2006_01_02_150405")) + ext
-	err = uploadFile(ctx, bucket, name, fname, file)
+	err = ops.UploadFile(ctx, bucket, name, fname, file)
 	if err != nil {
 		return err
 	}
 
 	// Persisting state
-	err = writeStatus(ctx, bucket, name, hash, fname)
+	err = ops.WriteStatus(ctx, bucket, name, hash, fname)
 	if err != nil {
 		return err
 	}
@@ -191,18 +101,33 @@ func download(c *cli.Context) error {
 	bucket := client.Bucket("data.openland.com")
 
 	// Loading latest state
-	status, err := readStatus(ctx, bucket, name)
-	if err != nil {
-		return err
+	var status *ops.CurrentSyncStatus
+	keyFile := c.String("key")
+	if keyFile != "" {
+		status, err = ops.ReadStatusFromFile(keyFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		status, err = ops.ReadStatus(ctx, bucket, name)
+		if err != nil {
+			return err
+		}
 	}
 	if status == nil {
 		return cli.NewExitError("Unable to find dataset", 1)
 	}
 
 	// Downloading
-	err = downloadFile(ctx, bucket, name, *status, file)
+	err = ops.DownloadFile(ctx, bucket, name, *status, file)
 	if err != nil {
 		return err
+	}
+
+	// Exporting key
+	exportKey := c.String("export-key")
+	if exportKey != "" {
+		ops.WriteStatusToFile(exportKey, status.Hash, status.Latest)
 	}
 
 	return nil
@@ -232,12 +157,20 @@ func CreateSyncCommands() []cli.Command {
 			Usage: "Download Dataset",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "file",
+					Name:  "file, out",
 					Usage: "Path to dataset",
 				},
 				cli.StringFlag{
 					Name:  "name",
 					Usage: "Unique name of dataset",
+				},
+				cli.StringFlag{
+					Name:  "key",
+					Usage: "Explicitly download speicific version instead of latest one",
+				},
+				cli.StringFlag{
+					Name:  "export-key",
+					Usage: "Export key during download",
 				},
 			},
 			Action: func(c *cli.Context) error {
