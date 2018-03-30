@@ -205,8 +205,9 @@ func RecordReader(src string, handler func(row map[string]interface{}) error) er
 		if e != nil {
 			if e == io.EOF {
 				isEOF = true
+			} else {
+				return e
 			}
-			return e
 		}
 
 		var d map[string]interface{}
