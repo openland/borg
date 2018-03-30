@@ -158,7 +158,7 @@ func doQuery(c *cli.Context, streaming bool) error {
 				pending = make([]map[string]interface{}, 0)
 			}
 		}
-		if len(pending) >= batchSize {
+		if len(pending) > 0 {
 			queryVariables["data"] = pending
 			if faultTolerant {
 				for {
