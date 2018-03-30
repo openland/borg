@@ -209,17 +209,18 @@ func RecordReader(src string, handler func(row map[string]interface{}) error) er
 				return e
 			}
 		}
-
-		var d map[string]interface{}
-		e = json.Unmarshal(line, &d)
-		if e != nil {
-			return e
-		}
-		bar.Set(linesRead)
-		linesRead = linesRead + 1
-		e = handler(d)
-		if e != nil {
-			return e
+		if len(line) > 0 {
+			var d map[string]interface{}
+			e = json.Unmarshal(line, &d)
+			if e != nil {
+				return e
+			}
+			bar.Set(linesRead)
+			linesRead = linesRead + 1
+			e = handler(d)
+			if e != nil {
+				return e
+			}
 		}
 		if isEOF {
 			break
