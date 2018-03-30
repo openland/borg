@@ -78,8 +78,9 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 					} else {
 						return e
 					}
-				} else {
-					read++
+				}
+				read++
+				if len(srcLine) > 0 {
 					srcLoaded = true
 					e = json.Unmarshal(line, &srcLine)
 					if e != nil {
@@ -97,8 +98,9 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 					} else {
 						return e
 					}
-				} else {
-					read++
+				}
+				read++
+				if len(updLine) > 0 {
 					updLoaded = true
 					e = json.Unmarshal(line, &updLine)
 					if e != nil {
@@ -197,11 +199,12 @@ func RecordReader(src string, handler func(row map[string]interface{}) error) er
 	// Main Loop
 	//
 	linesRead := 0
+	isEOF := false
 	for {
 		line, e := rd.ReadBytes('\n')
 		if e != nil {
 			if e == io.EOF {
-				break
+				isEOF = true
 			}
 			return e
 		}
@@ -216,6 +219,9 @@ func RecordReader(src string, handler func(row map[string]interface{}) error) er
 		e = handler(d)
 		if e != nil {
 			return e
+		}
+		if isEOF {
+			break
 		}
 	}
 	return nil

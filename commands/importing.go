@@ -110,52 +110,55 @@ func doQuery(c *cli.Context, streaming bool) error {
 		linesRead := 0
 		for {
 			line, e := rd.ReadBytes('\n')
-			if e != nil {
-				if e == io.EOF {
-					break
-				}
+			if e != nil && e != io.EOF {
 				return e
 			}
+			if len(line) > 0 {
 
-			var d map[string]interface{}
-			e = json.Unmarshal(line, &d)
-			if e != nil {
-				return e
-			}
-
-			// Cleanup metadata fields: everything that starts with "$"
-			toRemove := make([]string, 0)
-			for k := range d {
-				if strings.HasPrefix(k, "$") {
-					toRemove = append(toRemove, k)
+				var d map[string]interface{}
+				e = json.Unmarshal(line, &d)
+				if e != nil {
+					return e
 				}
-			}
-			for k := range toRemove {
-				delete(d, toRemove[k])
-			}
 
-			pending = append(pending, d)
-			linesRead = linesRead + 1
-			bar.Set(linesRead)
-			if len(pending) >= batchSize {
-				queryVariables["data"] = pending
-				if faultTolerant {
-					for {
+				// Cleanup metadata fields: everything that starts with "$"
+				toRemove := make([]string, 0)
+				for k := range d {
+					if strings.HasPrefix(k, "$") {
+						toRemove = append(toRemove, k)
+					}
+				}
+				for k := range toRemove {
+					delete(d, toRemove[k])
+				}
+
+				pending = append(pending, d)
+				linesRead = linesRead + 1
+				bar.Set(linesRead)
+				if len(pending) >= batchSize {
+					queryVariables["data"] = pending
+					if faultTolerant {
+						for {
+							_, e := utils.GraqhQLRequest(serverURL, body, queryVariables)
+							if e != nil {
+								fmt.Println(e)
+								time.Sleep(1000)
+							} else {
+								break
+							}
+						}
+					} else {
 						_, e := utils.GraqhQLRequest(serverURL, body, queryVariables)
 						if e != nil {
-							fmt.Println(e)
-							time.Sleep(1000)
-						} else {
-							break
+							return e
 						}
 					}
-				} else {
-					_, e := utils.GraqhQLRequest(serverURL, body, queryVariables)
-					if e != nil {
-						return e
-					}
+					pending = make([]map[string]interface{}, 0)
 				}
-				pending = make([]map[string]interface{}, 0)
+			}
+
+			if e != nil && e == io.EOF {
+				break
 			}
 		}
 		if len(pending) > 0 {

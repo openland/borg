@@ -66,11 +66,30 @@ func isKeywordArrayChanged(src []interface{}, dst []interface{}) bool {
 	return false
 }
 
-func isExtrasValueChanged(src []interface{}, dst []interface{}) bool {
+func isExtrasKeysChanged(src []interface{}, dst []interface{}) bool {
 	if len(src) != len(dst) {
 		return true
 	}
 
+	for _, s := range src {
+		a := s.(map[string]interface{})
+		akey := a["key"].(string)
+		found := false
+		for _, d := range dst {
+			if (d.(map[string]interface{}))["key"].(string) == akey {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isExtrasValueChanged(src []interface{}, dst []interface{}) bool {
 	for _, s := range src {
 		a := s.(map[string]interface{})
 		akey := a["key"].(string)
@@ -216,6 +235,9 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 			ints1, ok1 := e1[r]
 			ints2, ok2 := e2[r]
 			if ok1 && ok2 {
+				if isExtrasKeysChanged(ints1.([]interface{}), ints2.([]interface{})) {
+					return true, nil
+				}
 				if isExtrasValueChanged(ints1.([]interface{}), ints2.([]interface{})) {
 					return true, nil
 				}
@@ -234,6 +256,9 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 		enums1, ok1 := e1["enums"]
 		enums2, ok2 := e2["enums"]
 		if ok1 && ok2 {
+			if isExtrasKeysChanged(enums1.([]interface{}), enums2.([]interface{})) {
+				return true, nil
+			}
 			if isExtrasKeywordChanged(enums1.([]interface{}), enums2.([]interface{})) {
 				return true, nil
 			}

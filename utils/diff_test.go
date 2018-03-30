@@ -130,6 +130,12 @@ func TestExtras(t *testing.T) {
 
 	// Added key
 	assertChangedJson(t, `{"extras":{"strings":[{"key":"some","value":"!"}]}}`, `{"extras":{"strings":[{"key":"some","value":"!"},{"key":"some_key","value":"957 81 STREET"}]}}`)
+
+	// Removed key
+	assertChangedJson(t, `{"extras":{"strings":[{"key":"some","value":"!"},{"key":"some_key","value":"957 81 STREET"}]}}`, `{"extras":{"strings":[{"key":"some","value":"!"}]}}`)
+
+	// Replace key
+	assertChangedJson(t, `{"extras":{"strings":[{"key":"some","value":"!"}]}}`, `{"extras":{"strings":[{"key":"some2","value":"!"}]}}`)
 }
 
 func TestRandomSamples(t *testing.T) {
