@@ -159,6 +159,25 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 		}
 	}
 
+	// Retired flag
+	retired1, ok1 := src["retired"]
+	retired2, ok2 := dst["retired"]
+	if ok1 || ok2 {
+		var retired1v bool
+		var retired2v bool
+		retired1v = false
+		retired2v = false
+		if ok1 {
+			retired1v = retired1.(bool)
+		}
+		if ok2 {
+			retired2v = retired2.(bool)
+		}
+		if retired1v != retired2v {
+			return true, nil
+		}
+	}
+
 	// Check Extras
 	extras1, ok1 := src["extras"]
 	extras2, ok2 := dst["extras"]
