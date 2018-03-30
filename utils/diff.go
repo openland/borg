@@ -100,6 +100,7 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 	supportedFlags["geometry"] = true
 	supportedFlags["displayId"] = true
 	supportedFlags["extras"] = true
+	supportedFlags["retired"] = true
 
 	supportedExtras := make(map[string]bool)
 	supportedExtras["ints"] = true
