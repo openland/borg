@@ -8,18 +8,47 @@ import (
 	"io/ioutil"
 	"os"
 
-	"cloud.google.com/go/storage"
 	"github.com/statecrafthq/borg/utils"
+	"gopkg.in/cheggaaa/pb.v1"
 )
+
+type PassThru struct {
+	io.Reader
+	progress *pb.ProgressBar
+	read     int64
+}
+
+func (pt *PassThru) Read(p []byte) (int, error) {
+	n, err := pt.Reader.Read(p)
+	pt.read += int64(n)
+
+	if err == nil {
+		pt.progress.Set(int(pt.read))
+	}
+
+	return n, err
+}
+
+func Copy(writer io.Writer, reader io.Reader, total int64) error {
+	progress := pb.New(int(total))
+	progress.Start()
+	_, e := io.Copy(writer, &PassThru{progress: progress, Reader: reader})
+	progress.Finish()
+	return e
+}
 
 type CurrentSyncStatus struct {
 	Hash   string `json:"hash"`
 	Latest string `json:"latest"`
 }
 
-func ReadStatus(ctx context.Context, bucket *storage.BucketHandle, name string) (*CurrentSyncStatus, error) {
-	currentName := "imports/" + name + "/CURRENT"
-	reader, err := bucket.Object(currentName).NewReader(ctx)
+func ReadStatus(fullPath string) (*CurrentSyncStatus, error) {
+	bucket, err := CreateBucket()
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := bucket.Object(fullPath).NewReader(context.Background())
 	if err != nil {
 		if err.Error() != "storage: object doesn't exist" {
 			return nil, err
@@ -57,9 +86,12 @@ func ReadStatusFromFile(fileName string) (*CurrentSyncStatus, error) {
 	return nil, err
 }
 
-func WriteStatus(ctx context.Context, bucket *storage.BucketHandle, name string, hash string, fileName string) error {
-	currentName := "imports/" + name + "/CURRENT"
-	writer := bucket.Object(currentName).NewWriter(ctx)
+func WriteStatus(fullPath string, hash string, fileName string) error {
+	bucket, err := CreateBucket()
+	if err != nil {
+		return err
+	}
+	writer := bucket.Object(fullPath).NewWriter(context.Background())
 	state := &CurrentSyncStatus{Hash: hash, Latest: fileName}
 	data, err := json.Marshal(state)
 	if err != nil {
@@ -94,22 +126,40 @@ func WriteStatusToFile(outFileName string, hash string, fileName string) error {
 	return nil
 }
 
-func UploadFile(ctx context.Context, bucket *storage.BucketHandle, name string, fileName string, src string) error {
-	writer := bucket.Object("imports/" + name + "/" + fileName).NewWriter(ctx)
+func UploadFile(name string, fileName string, src string) error {
+	bucket, err := CreateBucket()
+	if err != nil {
+		return err
+	}
+	writer := bucket.Object("imports/" + name + "/" + fileName).NewWriter(context.Background())
+	stat, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	size := stat.Size()
 	file, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	_, err = io.Copy(writer, file)
+	err = Copy(writer, file, size)
 	if err != nil {
 		return err
 	}
 	return writer.Close()
 }
 
-func DownloadFile(ctx context.Context, bucket *storage.BucketHandle, name string, status CurrentSyncStatus, dst string) error {
-	reader, err := bucket.Object("imports/" + name + "/" + status.Latest).NewReader(ctx)
+func DownloadFile(name string, status CurrentSyncStatus, dst string) error {
+	bucket, err := CreateBucket()
+	if err != nil {
+		return err
+	}
+	object := bucket.Object("imports/" + name + "/" + status.Latest)
+	attr, err := object.Attrs(context.Background())
+	if err != nil {
+		return err
+	}
+	reader, err := object.NewReader(context.Background())
 	if err != nil {
 		return err
 	}
@@ -119,7 +169,8 @@ func DownloadFile(ctx context.Context, bucket *storage.BucketHandle, name string
 		return err
 	}
 	defer file.Close()
-	_, err = io.Copy(file, reader)
+
+	err = Copy(file, reader, attr.Size)
 	if err != nil {
 		return err
 	}

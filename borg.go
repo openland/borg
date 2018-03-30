@@ -35,6 +35,7 @@ func main() {
 	app.Commands = append(app.Commands, commands.CreateDiffCommands()...)
 	app.Commands = append(app.Commands, commands.CreateFinalizeCommands()...)
 	app.Commands = append(app.Commands, commands.CreateAnalyzeCommands()...)
+	app.Commands = append(app.Commands, commands.CreateCursorCommands()...)
 
 	//
 	// Starting

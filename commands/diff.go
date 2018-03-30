@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/statecrafthq/borg/commands/ops"
@@ -12,11 +13,8 @@ import (
 	"encoding/json"
 )
 
-func writeDiffAdded(writer *bufio.Writer, added map[string]interface{}) error {
-	record := make(map[string]interface{})
-	record["action"] = "added"
-	record["new"] = added
-	bytes, err := json.Marshal(record)
+func writeRecord(writer *bufio.Writer, new map[string]interface{}) error {
+	bytes, err := json.Marshal(new)
 	if err != nil {
 		return err
 	}
@@ -31,60 +29,7 @@ func writeDiffAdded(writer *bufio.Writer, added map[string]interface{}) error {
 	return nil
 }
 
-func writeDiffRemoved(writer *bufio.Writer, removed map[string]interface{}) error {
-	record := make(map[string]interface{})
-	record["action"] = "removed"
-	record["old"] = removed
-	bytes, err := json.Marshal(record)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bytes)
-	if err != nil {
-		return err
-	}
-	_, err = writer.WriteString("\n")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func writeDiffUpdated(writer *bufio.Writer, old map[string]interface{}, new map[string]interface{}) error {
-	record := make(map[string]interface{})
-	record["action"] = "updated"
-	record["old"] = old
-	record["new"] = new
-	bytes, err := json.Marshal(record)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bytes)
-	if err != nil {
-		return err
-	}
-	_, err = writer.WriteString("\n")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func diff(c *cli.Context) error {
-	// Validate argumens
-	src := c.String("current")
-	updated := c.String("updated")
-	out := c.String("out")
-	if src == "" {
-		return cli.NewExitError("You should provide current file", 1)
-	}
-	if updated == "" {
-		return cli.NewExitError("You should provide updated file", 1)
-	}
-	if out == "" {
-		return cli.NewExitError("You should provide output file", 1)
-	}
-
+func doDiff(src string, updated string, out string) error {
 	//
 	// Preflight operations
 	//
@@ -109,7 +54,7 @@ func diff(c *cli.Context) error {
 			}
 			if changed {
 				// Record changed
-				e = writeDiffUpdated(writer, *srcLine, *updLine)
+				e = writeRecord(writer, *updLine)
 				if e != nil {
 					return e
 				}
@@ -117,13 +62,12 @@ func diff(c *cli.Context) error {
 				// Record is same
 			}
 		} else if srcLine != nil {
-			// Removed
-			e = writeDiffRemoved(writer, *srcLine)
-			if e != nil {
-				return e
-			}
+			// Throw if there are missing record
+			fmt.Println("Record was removed!")
+			fmt.Println(srcLine)
+			return cli.NewExitError("Record was removed!", 1)
 		} else if updLine != nil {
-			e = writeDiffAdded(writer, *updLine)
+			e = writeRecord(writer, *updLine)
 			if e != nil {
 				return e
 			}
@@ -143,6 +87,24 @@ func diff(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func diff(c *cli.Context) error {
+	// Validate argumens
+	src := c.String("current")
+	updated := c.String("updated")
+	out := c.String("out")
+	if src == "" {
+		return cli.NewExitError("You should provide current file", 1)
+	}
+	if updated == "" {
+		return cli.NewExitError("You should provide updated file", 1)
+	}
+	if out == "" {
+		return cli.NewExitError("You should provide output file", 1)
+	}
+
+	return doDiff(src, updated, out)
 }
 
 func CreateDiffCommands() []cli.Command {

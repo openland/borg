@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -11,8 +10,6 @@ import (
 	"github.com/statecrafthq/borg/utils"
 
 	"github.com/urfave/cli"
-
-	"cloud.google.com/go/storage"
 )
 
 func sync(c *cli.Context) error {
@@ -24,6 +21,7 @@ func sync(c *cli.Context) error {
 	if name == "" {
 		return cli.NewExitError("Dataset name is not provided", 1)
 	}
+	statusPath := "imports/" + name + "/CURRENT"
 	var validID = regexp.MustCompile(`^[a-z0-9_]+$`)
 	if !validID.MatchString(name) {
 		return cli.NewExitError("Invalid name", 1)
@@ -35,16 +33,8 @@ func sync(c *cli.Context) error {
 		return err
 	}
 
-	// Init Bucket API
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
-	bucket := client.Bucket("data.openland.com")
-
 	// Loading latest state
-	status, err := ops.ReadStatus(ctx, bucket, name)
+	status, err := ops.ReadStatus(statusPath)
 	if err != nil {
 		return err
 	}
@@ -65,13 +55,13 @@ func sync(c *cli.Context) error {
 	log.Println("Dataset was changed")
 	ext := filepath.Ext(file)
 	fname := name + "_" + (time.Now().Format("2006_01_02_150405")) + ext
-	err = ops.UploadFile(ctx, bucket, name, fname, file)
+	err = ops.UploadFile(name, fname, file)
 	if err != nil {
 		return err
 	}
 
 	// Persisting state
-	err = ops.WriteStatus(ctx, bucket, name, hash, fname)
+	err = ops.WriteStatus(statusPath, hash, fname)
 	if err != nil {
 		return err
 	}
@@ -91,17 +81,11 @@ func download(c *cli.Context) error {
 	if !validID.MatchString(name) {
 		return cli.NewExitError("Invalid name", 1)
 	}
-
-	// Init Bucket API
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
-	bucket := client.Bucket("data.openland.com")
+	statusPath := "imports/" + name + "/CURRENT"
 
 	// Loading latest state
 	var status *ops.CurrentSyncStatus
+	var err error
 	keyFile := c.String("key")
 	if keyFile != "" {
 		status, err = ops.ReadStatusFromFile(keyFile)
@@ -109,7 +93,7 @@ func download(c *cli.Context) error {
 			return err
 		}
 	} else {
-		status, err = ops.ReadStatus(ctx, bucket, name)
+		status, err = ops.ReadStatus(statusPath)
 		if err != nil {
 			return err
 		}
@@ -119,7 +103,7 @@ func download(c *cli.Context) error {
 	}
 
 	// Downloading
-	err = ops.DownloadFile(ctx, bucket, name, *status, file)
+	err = ops.DownloadFile(name, *status, file)
 	if err != nil {
 		return err
 	}
