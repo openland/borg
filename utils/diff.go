@@ -67,12 +67,21 @@ func isKeywordArrayChanged(src []interface{}, dst []interface{}) bool {
 }
 
 func isExtrasValueChanged(src []interface{}, dst []interface{}) bool {
+	if len(src) != len(dst) {
+		return true
+	}
+
 	for _, s := range src {
+		a := s.(map[string]interface{})
+		akey := a["key"].(string)
+		avalue := a["value"]
+
 		for _, d := range dst {
-			a := s.(map[string]interface{})
 			b := d.(map[string]interface{})
-			if a["key"] == b["key"] {
-				return a["value"] != b["value"]
+			if akey == b["key"] {
+				if avalue != b["value"] {
+					return true
+				}
 			}
 		}
 	}
