@@ -57,11 +57,10 @@ func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layou
 	sideAngles := utils.GetSideGlobalAngles(poly)
 	center := utils.FindCenter(polys)
 	baseRect := [][]float64{
-		{-largeSide / 2, smallSide / 2},
-		{largeSide / 2, smallSide / 2},
-		{largeSide / 2, -smallSide / 2},
-		{-largeSide / 2, -smallSide / 2},
-		{-largeSide / 2, smallSide / 2}}
+		{-smallSide / 2, largeSide / 2},
+		{smallSide / 2, largeSide / 2},
+		{smallSide / 2, -largeSide / 2},
+		{-smallSide / 2, -largeSide / 2}}
 
 	for i := 0; i < len(sideAngles); i++ {
 		rect := utils.Rotate2D(baseRect, sideAngles[i])

@@ -41,3 +41,21 @@ func TestConvex(t *testing.T) {
 	layout := LayoutRectangle(projected, 3.6576, 10.668)
 	fmt.Println(layout)
 }
+
+func TestNarrow(t *testing.T) {
+	polys := [][][][]float64{[][][]float64{[][]float64{
+		{-74.008608, 40.717205},
+		{-74.008557, 40.71727},
+		{-74.008904, 40.717317},
+		{-74.008917, 40.717247},
+		{-74.008763, 40.717226},
+		{-74.008608, 40.717205},
+	}}}
+	proj := utils.NewProjection(polys)
+	projected := proj.ProjectMultiPolygon(polys)
+	layout := LayoutRectangle(projected, 3.6576, 10.668)
+
+	// p1 := []float64{-3.6498172830260374,4.298256659603395}
+	//[[-3.6498172830260374 4.298256659603395] [5.519337229604841 -1.1545251555347096] [3.6498120358432047 -4.29823527415101] [-5.519342476787673 1.1545465409870952] [-3.6498172830260374 4.298256659603395]]
+	fmt.Println(layout)
+}
