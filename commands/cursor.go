@@ -116,7 +116,7 @@ func cursorSet(c *cli.Context) error {
 		return err
 	}
 
-	err = ops.WriteStatus("cursors/"+key+"/CURSOR", cursor.Hash, cursor.Latest)
+	err = ops.WriteStatus("cursors/"+name+"/CURSOR", cursor.Hash, cursor.Latest)
 	if err != nil {
 		return err
 	}
