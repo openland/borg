@@ -14,28 +14,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *map[string]interface{}) error) error {
-
-	//
-	// Preflight
-	//
-
-	// Working folder
-	e := utils.PrepareTemp()
-	if e != nil {
-		return e
-	}
-	defer utils.ClearTemp()
-
-	// Sort
-	aLines, e := SortFile(a, "./tmp/a.ols")
-	if e != nil {
-		return e
-	}
-	bLines, e := SortFile(b, "./tmp/b.ols")
-	if e != nil {
-		return e
-	}
+func DiffReaderSorted(a string, aLines int, b string, bLines int, handler func(a *map[string]interface{}, b *map[string]interface{}) error) error {
 
 	// Init readers
 	srcFile, e := os.Open("./tmp/a.ols")
@@ -65,7 +44,7 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 	bar := pb.StartNew(aLines + bLines)
 	for {
 		bar.Set(read)
-		if srcLoaded && updLoaded {
+		if srcLoaded || updLoaded {
 			return errors.New("Invariant broken")
 		}
 		// Loading next chunk
@@ -80,7 +59,7 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 					}
 				}
 				read++
-				if len(srcLine) > 0 {
+				if len(line) > 0 {
 					srcLoaded = true
 					e = json.Unmarshal(line, &srcLine)
 					if e != nil {
@@ -100,7 +79,7 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 					}
 				}
 				read++
-				if len(updLine) > 0 {
+				if len(line) > 0 {
 					updLoaded = true
 					e = json.Unmarshal(line, &updLine)
 					if e != nil {
@@ -112,8 +91,12 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 
 		// Handling cases
 		if !updLoaded && !srcLoaded {
-			// All records are read
-			break
+			if updEOF && srcEOF {
+				// All records are read
+				break
+			}
+
+			// Otherwise ignore
 		} else if updLoaded && !srcLoaded {
 
 			// Added
@@ -170,8 +153,36 @@ func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *m
 	}
 
 	bar.Finish()
-
 	return nil
+}
+
+func DiffReader(a string, b string, handler func(a *map[string]interface{}, b *map[string]interface{}) error) error {
+
+	//
+	// Preflight
+	//
+
+	// Working folder
+	e := utils.PrepareTemp()
+	if e != nil {
+		return e
+	}
+	defer utils.ClearTemp()
+
+	// Sort
+	aLines, e := SortFile(a, "./tmp/a.ols")
+	if e != nil {
+		return e
+	}
+	bLines, e := SortFile(b, "./tmp/b.ols")
+	if e != nil {
+		return e
+	}
+
+	//
+	// Start Reader
+	//
+	return DiffReaderSorted("./tmp/a.ols", aLines, "./tmp/b.ols", bLines, handler)
 }
 
 func RecordReader(src string, handler func(row map[string]interface{}) error) error {
