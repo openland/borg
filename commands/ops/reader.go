@@ -44,7 +44,7 @@ func DiffReaderSorted(a string, aLines int, b string, bLines int, handler func(a
 	bar := pb.StartNew(aLines + bLines)
 	for {
 		bar.Set(read)
-		if srcLoaded || updLoaded {
+		if srcLoaded && updLoaded {
 			return errors.New("Invariant broken")
 		}
 		// Loading next chunk
