@@ -143,7 +143,15 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		extras.AppendInt("count_rooms", int32(feature.Properties["UnitsTotal"].(float64)))
 	}
 	if feature.Properties["NumBldgs"] != nil {
-		extras.AppendInt("count_units", int32(feature.Properties["NumBldgs"].(float64)))
+		buildings := int32(feature.Properties["NumBldgs"].(float64))
+		extras.AppendInt("count_units", buildings)
+		if buildings == 0 {
+			extras.AppendString("is_vacant", "true")
+		} else {
+			extras.AppendString("is_vacant", "false")
+		}
+	} else {
+		extras.AppendString("is_vacant", "false")
 	}
 	if feature.Properties["NumFloors"] != nil {
 		extras.AppendInt("count_stories", int32(feature.Properties["NumFloors"].(float64)))
