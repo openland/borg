@@ -115,6 +115,7 @@ func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 	}
 
 	formats = append(formats, fmt.Sprintf("%s-%d-%d", borough, block, lot))
+	formats = append(formats, fmt.Sprintf("%s-%05d-%04d", borough, block, lot))
 
 	return formats, nil
 }
@@ -150,8 +151,6 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		} else {
 			extras.AppendString("is_vacant", "false")
 		}
-	} else {
-		extras.AppendString("is_vacant", "false")
 	}
 	if feature.Properties["NumFloors"] != nil {
 		extras.AppendInt("count_stories", int32(feature.Properties["NumFloors"].(float64)))
