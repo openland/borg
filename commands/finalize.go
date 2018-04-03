@@ -35,7 +35,13 @@ func doFinalize(c *cli.Context) error {
 	e = ops.RecordTransformer(src, dst, func(row map[string]interface{}) (map[string]interface{}, error) {
 		if geom, ok := row["geometry"]; ok {
 
+			// Check if already optimized
+			if _, ok := row["$geometry_src"]; ok {
+				return row, nil
+			}
+
 			// Convert types
+			src := geom
 			coords := utils.ParseFloat4(geom.([]interface{}))
 
 			// Repair
@@ -66,6 +72,7 @@ func doFinalize(c *cli.Context) error {
 
 			// Save updated geometry
 			row["geometry"] = coords
+			row["$geometry_src"] = src
 		}
 		return row, nil
 	})

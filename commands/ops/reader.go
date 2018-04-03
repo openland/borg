@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 
 	"github.com/statecrafthq/borg/utils"
@@ -249,7 +250,7 @@ func RecordTransformer(src string, dst string, handler func(row map[string]inter
 	writer := bufio.NewWriter(dstFile)
 	var writerLock sync.Mutex
 	ctx := context.Background()
-	sem := semaphore.NewWeighted(10)
+	sem := semaphore.NewWeighted(int64(8 * runtime.NumCPU()))
 
 	var perror error
 	e = RecordReader(src, func(row map[string]interface{}) error {

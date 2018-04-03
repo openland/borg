@@ -14,7 +14,7 @@ func loadKeys(src map[string]interface{}) []string {
 	return skeys
 }
 
-func isGeometryChanged(coords1 []interface{}, coords2 []interface{}) bool {
+func IsGeometryChanged(coords1 []interface{}, coords2 []interface{}) bool {
 	if len(coords1) != len(coords2) {
 		return true
 	}
@@ -126,6 +126,7 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 	supportedFlags := make(map[string]bool)
 	supportedFlags["id"] = true
 	supportedFlags["geometry"] = true
+	supportedFlags["$geometry_src"] = true
 	supportedFlags["displayId"] = true
 	supportedFlags["extras"] = true
 	supportedFlags["retired"] = true
@@ -172,7 +173,18 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 	if ok1 && ok2 {
 		coords1 := geom1.([]interface{})
 		coords2 := geom2.([]interface{})
-		if isGeometryChanged(coords1, coords2) {
+		if IsGeometryChanged(coords1, coords2) {
+			return true, nil
+		}
+	}
+
+	// Check geometry src
+	geom1, ok1 = src["$geometry_src"]
+	geom2, ok2 = dst["$geometry_src"]
+	if ok1 && ok2 {
+		coords1 := geom1.([]interface{})
+		coords2 := geom2.([]interface{})
+		if IsGeometryChanged(coords1, coords2) {
 			return true, nil
 		}
 	}

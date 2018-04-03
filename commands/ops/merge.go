@@ -2,6 +2,8 @@ package ops
 
 import (
 	"encoding/json"
+
+	"github.com/statecrafthq/borg/utils"
 )
 
 func mergeDisplayIds(a []interface{}, b []interface{}) []interface{} {
@@ -135,6 +137,7 @@ func Merge(previous map[string]interface{}, latest map[string]interface{}) (map[
 	if e != nil {
 		return nil, e
 	}
+	delete(res, "$geometry_src") // We will forward it manually later
 
 	// Display Id
 	ids1, ok1 := previous["displayId"]
@@ -170,9 +173,57 @@ func Merge(previous map[string]interface{}, latest map[string]interface{}) (map[
 		res["retired"] = false
 	}
 
+	// Geometry
+	geometry1, ok1 := previous["geometry"]
+	geometry2, ok2 := latest["geometry"]
+	goemetry1Src, ok1Src := previous["$geometry_src"]
+	goemetry2Src, ok2Src := latest["$geometry_src"]
+	if ok1 {
+		if ok2 {
+
+			// Detecting real geometry
+			realGeometry1 := geometry1
+			realGeometry2 := geometry2
+			if ok1Src {
+				realGeometry1 = goemetry1Src
+			}
+			if ok2Src {
+				realGeometry2 = goemetry2Src
+			}
+
+			if utils.IsGeometryChanged(realGeometry1.([]interface{}), realGeometry2.([]interface{})) {
+				// Geometry was changed copy from latest
+				res["geometry"] = geometry2
+				if ok2Src {
+					res["$geometry_src"] = goemetry2Src
+				}
+			} else {
+				// Otherwise use fields from latest, if not found copy from previous
+				if ok2Src {
+					res["geometry"] = geometry2
+					res["$geometry_src"] = goemetry2Src
+				} else if ok1Src {
+					res["geometry"] = geometry1
+					res["$geometry_src"] = goemetry1Src
+				} else {
+					res["geometry"] = geometry2
+				}
+			}
+		} else {
+			// Forward geometry
+			res["geometry"] = geometry1
+
+			// Forward $geometry_src if present
+			goemetry1Src, ok := previous["$geometry_src"]
+			if ok {
+				res["$geometry_src"] = goemetry1Src
+			}
+		}
+	}
+
 	// Missing keys
 	for k := range previous {
-		if k == "extras" || k == "displayId" || k == "retired" {
+		if k == "extras" || k == "displayId" || k == "retired" || k == "geometry" || k == "$geometry_src" {
 			continue
 		}
 		_, p := latest[k]
