@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"runtime"
@@ -250,7 +251,9 @@ func RecordTransformer(src string, dst string, handler func(row map[string]inter
 	writer := bufio.NewWriter(dstFile)
 	var writerLock sync.Mutex
 	ctx := context.Background()
-	sem := semaphore.NewWeighted(int64(8 * runtime.NumCPU()))
+	processes := int64(8 * runtime.NumCPU())
+	fmt.Printf("Running tranwformer in %d processes\n", processes)
+	sem := semaphore.NewWeighted(processes)
 
 	var perror error
 	e = RecordReader(src, func(row map[string]interface{}) error {
