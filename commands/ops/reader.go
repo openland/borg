@@ -251,7 +251,7 @@ func RecordTransformer(src string, dst string, handler func(row map[string]inter
 	writer := bufio.NewWriter(dstFile)
 	var writerLock sync.Mutex
 	ctx := context.Background()
-	processes := int64(8 * runtime.NumCPU())
+	processes := int64(2 * runtime.NumCPU())
 	fmt.Printf("Running tranwformer in %d processes\n", processes)
 	sem := semaphore.NewWeighted(processes)
 
