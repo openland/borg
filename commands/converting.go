@@ -11,6 +11,7 @@ import (
 
 	"github.com/statecrafthq/borg/commands/drivers"
 	"github.com/statecrafthq/borg/commands/ops"
+	"github.com/statecrafthq/borg/geometry"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/urfave/cli"
 	emoji "gopkg.in/kyokomi/emoji.v1"
@@ -267,7 +268,7 @@ func converGeoJson(c *cli.Context) error {
 		}
 		if len(currentCoordinates) > 0 {
 			fields["geometry"] = currentCoordinates
-			extras.AppendFloat("area", utils.MeasureArea(currentCoordinates))
+			extras.AppendFloat("area", geometry.NewGeoMultipolygon(currentCoordinates).Area())
 		}
 		if retiredType != drivers.Unkwnon {
 			if retiredType == drivers.Retired {

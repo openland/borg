@@ -1,34 +1,25 @@
-package ops
+package geometry
 
-import "github.com/statecrafthq/borg/utils"
-
-type ParcelType int32
+type PolygonType int32
 
 const (
-	TypeMultipolygon     ParcelType = 0
-	TypeComplexPolygon   ParcelType = 1
-	TypePolygonWithHoles ParcelType = 2
-	TypeTriangle         ParcelType = 3
-	TypeRectangle        ParcelType = 4
-	TypeQuadriliteral    ParcelType = 5
-	TypeConvexPolygon    ParcelType = 6
-	TypeBroken           ParcelType = 7
+	TypeComplexPolygon   PolygonType = 1
+	TypePolygonWithHoles PolygonType = 2
+	TypeTriangle         PolygonType = 3
+	TypeRectangle        PolygonType = 4
+	TypeQuadriliteral    PolygonType = 5
+	TypeConvexPolygon    PolygonType = 6
+	TypeBroken           PolygonType = 7
 )
 
-func ClassifyParcelGeometry(projected [][][][]float64) ParcelType {
-
-	// If more than one polygon mark is as multipolygon and do not analyze further
-	if len(projected) > 1 {
-		return TypeMultipolygon
-	}
-
+func (poly Polygon2D) Classify() PolygonType {
 	// Check if there are any innner circles (holes)
-	if len(projected[0]) > 1 {
+	if len(poly.Holes) > 0 {
 		return TypePolygonWithHoles
 	}
 
 	// Here we have single polygon without holes, so simplify to one line circle
-	line := projected[0][0]
+	line := poly.Polygon
 
 	// Is broken?
 	if len(line) < 4 {
@@ -36,7 +27,7 @@ func ClassifyParcelGeometry(projected [][][][]float64) ParcelType {
 	}
 
 	// Load angles for furher processing
-	angles := utils.GetAngles(line)
+	angles := poly.Angles()
 
 	// Check if polygon is complex (eg NOT convex)
 	for _, angle := range angles {

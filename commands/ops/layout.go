@@ -3,36 +3,36 @@ package ops
 import (
 	"math"
 
-	"github.com/statecrafthq/borg/utils"
+	"github.com/statecrafthq/borg/geometry"
 )
 
 type Layout struct {
 	Analyzed    bool
 	Fits        bool
 	HasLocation bool
-	Center      []float64
+	Center      geometry.Point2D
 	Angle       float64
 }
 
-func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layout {
-	t := ClassifyParcelGeometry(polys)
+func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Layout {
+	t := poly.Classify()
 	smallSide := math.Min(width, height)
 	largeSide := math.Max(width, height)
+	center := poly.Center()
+
 	// Ignore all complex polygons
-	if t == TypeMultipolygon || t == TypePolygonWithHoles || t == TypeComplexPolygon {
+	if t == geometry.TypePolygonWithHoles || t == geometry.TypeComplexPolygon {
 		return Layout{Analyzed: false}
 	}
-	poly := polys[0][0]
 
 	// Rectangle
-	if t == TypeRectangle {
-		sides := utils.GetSides(poly)
-		center := utils.FindCenter(polys)
+	if t == geometry.TypeRectangle {
+		sides := poly.Edges()
 		side1 := (sides[0] + sides[2]) / 2
 		side2 := (sides[1] + sides[3]) / 2
 		// Second side is inverted to make them aligned
-		angle1 := (utils.GlobalAngle(poly[0], poly[1]) + utils.GlobalAngle(poly[3], poly[2])) / 2
-		angle2 := (utils.GlobalAngle(poly[1], poly[2]) + utils.GlobalAngle(poly[4], poly[3])) / 2
+		angle1 := (poly.Polygon[0].Azimuth(poly.Polygon[1]) + poly.Polygon[3].Azimuth(poly.Polygon[2])) / 2
+		angle2 := (poly.Polygon[1].Azimuth(poly.Polygon[2]) + poly.Polygon[0].Azimuth(poly.Polygon[3])) / 2
 		var mainAngle float64
 		if side1 > side2 {
 			mainAngle = angle1
@@ -45,7 +45,7 @@ func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layou
 		if small > smallSide && large > largeSide {
 			return Layout{
 				Analyzed: true, Fits: true, HasLocation: true,
-				Center: []float64{center.X, center.Y},
+				Center: center,
 				Angle:  mainAngle}
 		}
 		return Layout{Analyzed: true, Fits: false}
@@ -54,25 +54,28 @@ func LayoutRectangle(polys [][][][]float64, width float64, height float64) Layou
 	//
 	// Convex Polygon: Pick center and try aligned with any side of polygon
 	//
-	sideAngles := utils.GetSideGlobalAngles(poly)
-	center := utils.FindCenter(polys)
-	baseRect := [][]float64{
-		{-smallSide / 2, largeSide / 2},
-		{smallSide / 2, largeSide / 2},
-		{smallSide / 2, -largeSide / 2},
-		{-smallSide / 2, -largeSide / 2}}
+	sideAngles := poly.Azimuths()
+
+	rect := geometry.NewSimplePolygon(
+		[]geometry.Point2D{
+			{-smallSide / 2, largeSide / 2},
+			{smallSide / 2, largeSide / 2},
+			{smallSide / 2, -largeSide / 2},
+			{-smallSide / 2, -largeSide / 2},
+		})
 
 	for i := 0; i < len(sideAngles); i++ {
-		rect := utils.Rotate2D(baseRect, sideAngles[i])
-		rect = utils.Shift2D(rect, []float64{center.X, center.Y})
-		if utils.IsPointsInside(rect, poly) {
+		r := rect.
+			Rotate(sideAngles[i]).
+			Shift(center)
+
+		if poly.Contains(r) {
 			return Layout{
 				Analyzed: true, Fits: true, HasLocation: true,
-				Center: []float64{center.X, center.Y},
+				Center: center,
 				Angle:  sideAngles[i]}
 		}
 	}
 
 	return Layout{Analyzed: true}
-
 }
