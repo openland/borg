@@ -1,7 +1,6 @@
 package geometry
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
@@ -63,7 +62,6 @@ func TestEdges(t *testing.T) {
 		{8.690202895388282, -1.2801690473393077},
 		{-5.230990022569944, 7.068789511576092}})
 	res := testPoly.Edges()
-	fmt.Println(res)
 	assert.InEpsilon(t, 16.2903, res[0], 0.0001)
 	assert.InEpsilon(t, 6.7434, res[1], 0.0001)
 	assert.InEpsilon(t, 16.2328, res[2], 0.0001)
@@ -134,4 +132,23 @@ func TestPointHoles(t *testing.T) {
 	}}}
 	res := poly.ContainsPoint(Point2D{0.5, 0.5})
 	assert.Equal(t, false, res)
+}
+
+func TestIntersections(t *testing.T) {
+
+	outer := []Point2D{
+		{0, 0},
+		{0, 1},
+		{1, 1},
+		{1, 0},
+	}
+	inner := []Point2D{
+		{0.25, 0.25},
+		{0.25, 0.75},
+		{0.75, 0.75},
+		{0.75, 0.25},
+	}
+
+	res := isLineStringInLineString(inner, outer)
+	assert.Equal(t, true, res)
 }

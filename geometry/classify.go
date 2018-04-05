@@ -22,7 +22,7 @@ func (poly Polygon2D) Classify() PolygonType {
 	line := poly.Polygon
 
 	// Is broken?
-	if len(line) < 4 {
+	if len(line) < 3 {
 		return TypeBroken
 	}
 
@@ -37,12 +37,12 @@ func (poly Polygon2D) Classify() PolygonType {
 	}
 
 	// Check if our polygon is triangle
-	if len(line) == 4 {
+	if len(line) == 3 {
 		return TypeTriangle
 	}
 
 	// Handle Quadriliteral case
-	if len(line) == 5 {
+	if len(line) == 4 {
 
 		// Check if polygon is rectangle
 		isRect := true

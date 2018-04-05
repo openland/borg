@@ -21,7 +21,7 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 	center := poly.Center()
 
 	// Ignore all complex polygons
-	if t == geometry.TypePolygonWithHoles || t == geometry.TypeComplexPolygon {
+	if t == geometry.TypePolygonWithHoles {
 		return Layout{Analyzed: false}
 	}
 
@@ -44,9 +44,11 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 
 		if small > smallSide && large > largeSide {
 			return Layout{
-				Analyzed: true, Fits: true, HasLocation: true,
-				Center: center,
-				Angle:  mainAngle}
+				Analyzed:    true,
+				Fits:        true,
+				HasLocation: true,
+				Center:      center,
+				Angle:       mainAngle}
 		}
 		return Layout{Analyzed: true, Fits: false}
 	}

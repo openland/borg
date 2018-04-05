@@ -62,13 +62,11 @@ func analyzeDataset(c *cli.Context) error {
 				t := poly.Classify()
 				if t == geometry.TypeComplexPolygon {
 					notConvex++
-					notAnalyzed++
 
 					extras.AppendString("shape_type", "complex")
 				} else if t == geometry.TypePolygonWithHoles {
 					withHolesCount++
 					notConvex++
-					notAnalyzed++
 
 					extras.AppendString("shape_type", "complex")
 				} else if t == geometry.TypeTriangle {
@@ -100,7 +98,6 @@ func analyzeDataset(c *cli.Context) error {
 					extras.AppendFloat("side3", sides[2])
 					extras.AppendFloat("side4", sides[3])
 				} else if t == geometry.TypeConvexPolygon {
-					notAnalyzed++
 					extras.AppendString("shape_type", "convex")
 				} else if t == geometry.TypeBroken {
 					emptyCount++
@@ -120,6 +117,7 @@ func analyzeDataset(c *cli.Context) error {
 					extras.AppendString("analyzed", "true")
 				} else {
 					extras.AppendString("analyzed", "false")
+					notAnalyzed++
 				}
 
 				if kassita1.Analyzed && kassita1.Fits {
@@ -145,10 +143,10 @@ func analyzeDataset(c *cli.Context) error {
 				} else {
 					extras.AppendString("project_kassita2", "false")
 				}
-
 			}
 		} else {
 			emptyCount++
+			notAnalyzed++
 
 			extras.AppendString("shape_type", "broken")
 			extras.AppendString("analyzed", "false")

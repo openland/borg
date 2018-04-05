@@ -1,7 +1,6 @@
 package ops
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/statecrafthq/borg/geometry"
@@ -15,7 +14,6 @@ func TestLayout(t *testing.T) {
 		{-73.998862, 40.716515},
 		{-73.998523, 40.716396},
 		{-73.998485, 40.716457},
-		{-73.998824, 40.716576},
 	})
 	layout := LayoutRectangle(poly, 3.6576, 10.668)
 	assert.True(t, layout.Analyzed)
@@ -25,17 +23,17 @@ func TestLayout(t *testing.T) {
 }
 
 func TestConvex(t *testing.T) {
-	// [[[[-73.999994,40.72815],[-73.999787,40.728396],[-74.000423,40.728709],[-74.000626,40.728467],[-74.000314,40.728308],[-73.999994,40.72815]]]]
 	poly := geometry.NewProjectedSimplePolygon([]geometry.PointGeo{
 		{-73.999994, 40.72815},
 		{-73.999787, 40.728396},
 		{-74.000423, 40.728709},
 		{-74.000626, 40.728467},
 		{-74.000314, 40.728308},
-		{-73.999994, 40.72815},
 	})
 	layout := LayoutRectangle(poly, 3.6576, 10.668)
-	fmt.Println(layout)
+	assert.True(t, layout.Analyzed)
+	assert.True(t, layout.Fits)
+	assert.True(t, layout.HasLocation)
 }
 
 func TestNarrow(t *testing.T) {
@@ -45,11 +43,23 @@ func TestNarrow(t *testing.T) {
 		{-74.008904, 40.717317},
 		{-74.008917, 40.717247},
 		{-74.008763, 40.717226},
-		{-74.008608, 40.717205},
 	})
 	layout := LayoutRectangle(poly, 3.6576, 10.668)
+	assert.True(t, layout.Analyzed)
+	assert.True(t, layout.Fits)
+	assert.True(t, layout.HasLocation)
+}
 
-	// p1 := []float64{-3.6498172830260374,4.298256659603395}
-	//[[-3.6498172830260374 4.298256659603395] [5.519337229604841 -1.1545251555347096] [3.6498120358432047 -4.29823527415101] [-5.519342476787673 1.1545465409870952] [-3.6498172830260374 4.298256659603395]]
-	fmt.Println(layout)
+func TestComplex(t *testing.T) {
+	poly := geometry.NewProjectedSimplePolygon([]geometry.PointGeo{
+		{-74.002324, 40.719039},
+		{-74.002587, 40.719159},
+		{-74.00265, 40.719208},
+		{-74.002773, 40.719072},
+		{-74.00243, 40.718915},
+	})
+	layout := LayoutRectangle(poly, 3.6576, 10.668)
+	assert.True(t, layout.Analyzed)
+	assert.True(t, layout.Fits)
+	assert.True(t, layout.HasLocation)
 }

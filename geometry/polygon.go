@@ -116,14 +116,9 @@ func (polygon Polygon2D) Shift(delta Point2D) Polygon2D {
 	return Polygon2D{Polygon: main, Holes: holes}
 }
 
-func (polygon Polygon2D) Contains(dst Polygon2D) bool {
-	for _, p := range dst.Polygon {
-		if !polygon.ContainsPoint(p) {
-			return false
-		}
-	}
-	return true
-}
+//
+// Contains Points
+//
 
 func (polygon Polygon2D) ContainsAllPoints(points []Point2D) bool {
 	for _, p := range points {
@@ -171,6 +166,82 @@ func (polygon Polygon2D) ContainsPoint(point Point2D) bool {
 
 	return true
 }
+
+//
+// Polygon Contains
+//
+
+// If point is in bounding box of a and b
+func pointInSegmentBox(point Point2D, a Point2D, b Point2D) bool {
+	return !(point.X < math.Min(a.X, b.X)-eps || point.X > math.Max(a.X, b.X)+eps || point.Y < math.Min(a.Y, b.Y)-eps || point.Y > math.Max(a.Y, b.Y)+eps)
+}
+
+func lineIntersection(a1 Point2D, b1 Point2D, a2 Point2D, b2 Point2D) (bool, Point2D) {
+	dx1 := a1.X - b1.X
+	dy1 := a1.Y - b1.Y
+	dx2 := a2.X - b2.X
+	dy2 := a2.Y - b2.Y
+	denom := dx1*dy2 - dy1*dx2
+	if math.Abs(denom) < eps {
+		return false, Point2D{}
+	}
+	cross1 := a1.X*b1.Y - a1.Y*b1.X
+	cross2 := a2.X*b2.Y - a2.Y*b2.X
+	return true, Point2D{X: (cross1*dx2 - cross2*dx1) / denom, Y: (cross1*dy2 - cross2*dy1) / denom}
+}
+
+func segmentIntersection(a1 Point2D, b1 Point2D, a2 Point2D, b2 Point2D) bool {
+	ex, p := lineIntersection(a1, b1, a2, b2)
+	if ex && pointInSegmentBox(p, a1, b1) && pointInSegmentBox(p, a2, b2) {
+		return true
+	}
+	return false
+}
+
+func isLineStringInLineString(polyA []Point2D, polyB []Point2D) bool {
+	iA := 0
+	nA := len(polyA)
+	nB := len(polyB)
+	bA := polyA[nA-1]
+
+	for iA < nA {
+		aA := bA
+		bA = polyA[iA]
+
+		iB := 0
+		bB := polyB[nB-1]
+		for iB < nB {
+			aB := bB
+			bB = polyB[iB]
+			if segmentIntersection(aA, bA, aB, bB) {
+				fmt.Println(aA)
+				fmt.Println(bA)
+				fmt.Println(aB)
+				fmt.Println(bB)
+				return false
+			}
+			iB++
+		}
+
+		iA++
+	}
+	return containsPoint(polyA[0], polyB)
+}
+
+func (polygon Polygon2D) Contains(dst Polygon2D) bool {
+
+	if !isLineStringInLineString(dst.Polygon, polygon.Polygon) {
+		return false
+	}
+
+	// TODO: Handle Holes
+
+	return true
+}
+
+//
+// Debug
+//
 
 func (poly Polygon2D) DebugString() string {
 	res := ""
