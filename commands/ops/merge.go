@@ -10,14 +10,14 @@ func mergeDisplayIds(a []interface{}, b []interface{}) []interface{} {
 	res := make([]interface{}, 0)
 
 	// Initial filling
-	for _, i := range a {
+	for _, i := range b {
 		res = append(res, i)
 	}
 
 	// Adding missing in a but present in b
-	for _, i := range b {
+	for _, i := range a {
 		found := false
-		for _, j := range a {
+		for _, j := range b {
 			if i == j {
 				found = true
 				break

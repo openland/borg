@@ -113,6 +113,7 @@ func TestDisplayIdField(t *testing.T) {
 	assertNotChangedJson(t, `{"displayId": ["123", "11"]}`, `{"displayId": ["123", "11"]}`)
 	assertChangedJson(t, `{"displayId": ["123"]}`, `{"displayId": ["123", "11"]}`)
 	assertChangedJson(t, `{"displayId": ["123"]}`, `{}`)
+	assertChangedJson(t, `{"displayId": ["123","11"]}`, `{"displayId": ["11","123"]}`)
 }
 
 func TestExtras(t *testing.T) {

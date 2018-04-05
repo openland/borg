@@ -66,6 +66,18 @@ func isKeywordArrayChanged(src []interface{}, dst []interface{}) bool {
 	return false
 }
 
+func isDisplayIdChanged(src []interface{}, dst []interface{}) bool {
+	if len(src) != len(dst) {
+		return true
+	}
+	for i := 0; i < len(src); i++ {
+		if src[i] != dst[i] {
+			return true
+		}
+	}
+	return false
+}
+
 func isExtrasKeysChanged(src []interface{}, dst []interface{}) bool {
 	if len(src) != len(dst) {
 		return true
@@ -195,7 +207,7 @@ func IsChanged(src map[string]interface{}, dst map[string]interface{}) (bool, er
 	if ok1 && ok2 {
 		d1 := displayID1.([]interface{})
 		d2 := displayID2.([]interface{})
-		if isKeywordArrayChanged(d1, d2) {
+		if isDisplayIdChanged(d1, d2) {
 			return true, nil
 		}
 	}

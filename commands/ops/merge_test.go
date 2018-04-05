@@ -57,8 +57,9 @@ func TestEmptyMerge(t *testing.T) {
 
 func TestDisplayIdMerge(t *testing.T) {
 	assertMerge(t, `{"displayId": ["123"]}`, `{}`, `{"displayId": ["123"]}`)
-	assertMerge(t, `{"displayId": ["123"]}`, `{"displayId": ["1234"]}`, `{"displayId": ["123", "1234"]}`)
+	assertMerge(t, `{"displayId": ["123"]}`, `{"displayId": ["1234"]}`, `{"displayId": ["1234","123"]}`)
 	assertMerge(t, `{"displayId": []}`, `{"displayId": ["1234"]}`, `{"displayId": ["1234"]}`)
+	assertMerge(t, `{"displayId": ["1","2"]}`, `{"displayId": ["3"]}`, `{"displayId": ["3","1","2"]}`)
 }
 
 func TestBasicExtrasMerge(t *testing.T) {
