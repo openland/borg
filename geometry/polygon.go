@@ -214,10 +214,6 @@ func isLineStringInLineString(polyA []Point2D, polyB []Point2D) bool {
 			aB := bB
 			bB = polyB[iB]
 			if segmentIntersection(aA, bA, aB, bB) {
-				fmt.Println(aA)
-				fmt.Println(bA)
-				fmt.Println(aB)
-				fmt.Println(bB)
 				return false
 			}
 			iB++
