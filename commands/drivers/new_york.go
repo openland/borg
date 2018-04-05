@@ -114,8 +114,8 @@ func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 		return formats, nil
 	}
 
-	formats = append(formats, fmt.Sprintf("%s-%d-%d", borough, block, lot))
 	formats = append(formats, fmt.Sprintf("%s-%05d-%04d", borough, block, lot))
+	formats = append(formats, fmt.Sprintf("%s-%d-%d", borough, block, lot))
 
 	return formats, nil
 }
