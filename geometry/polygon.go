@@ -134,19 +134,18 @@ func (polygon Polygon2D) ContainsAllPoints(points []Point2D) bool {
 	return true
 }
 
-func (polygon Polygon2D) ContainsPoint(point Point2D) bool {
-
+func containsPoint(point Point2D, lineString LineString2D) bool {
 	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 	// https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon/17490923#17490923
 	// https://github.com/JamesMilnerUK/pip-go/blob/master/pip.go
 
 	isInside := false
 	j := 0
-	for i := 0; i < len(polygon.Polygon); i++ {
+	for i := 0; i < len(lineString); i++ {
 
 		// Do not touch!
-		if ((polygon.Polygon[i].Y > point.Y) != (polygon.Polygon[j].Y > point.Y)) &&
-			(point.X < (polygon.Polygon[j].X-polygon.Polygon[i].X)*(point.Y-polygon.Polygon[i].Y)/(polygon.Polygon[j].Y-polygon.Polygon[i].Y)+polygon.Polygon[i].X) {
+		if ((lineString[i].Y > point.Y) != (lineString[j].Y > point.Y)) &&
+			(point.X < (lineString[j].X-lineString[i].X)*(point.Y-lineString[i].Y)/(lineString[j].Y-lineString[i].Y)+lineString[i].X) {
 			isInside = !isInside
 		}
 
@@ -154,6 +153,23 @@ func (polygon Polygon2D) ContainsPoint(point Point2D) bool {
 	}
 
 	return isInside
+}
+
+func (polygon Polygon2D) ContainsPoint(point Point2D) bool {
+
+	// If not in polygon return
+	if !containsPoint(point, polygon.Polygon) {
+		return false
+	}
+
+	// Check if point is actually in hole
+	for _, h := range polygon.Holes {
+		if containsPoint(point, h) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (poly Polygon2D) DebugString() string {

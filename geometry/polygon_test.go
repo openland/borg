@@ -119,3 +119,19 @@ func TestPointTest(t *testing.T) {
 	res = poly.ContainsAllPoints(points)
 	assert.Equal(t, true, res)
 }
+
+func TestPointHoles(t *testing.T) {
+	poly := Polygon2D{Polygon: []Point2D{
+		{0, 0},
+		{0, 1},
+		{1, 1},
+		{1, 0},
+	}, Holes: [][]Point2D{[]Point2D{
+		{0.25, 0.25},
+		{0.25, 0.75},
+		{0.75, 0.75},
+		{0.75, 0.25},
+	}}}
+	res := poly.ContainsPoint(Point2D{0.5, 0.5})
+	assert.Equal(t, false, res)
+}
