@@ -22,15 +22,15 @@ func NewProjection(center PointGeo) *Projection {
 	centerProjected := center.ToCartesian()
 
 	// Avoid multiple calculations of the same values
-	cosLon := math.Cos(rad(-center.Longitude))
-	sinLon := math.Sin(rad(-center.Longitude))
+	cosLon := math.Cos(-rad(center.Longitude))
+	sinLon := math.Sin(-rad(center.Longitude))
 	cosLat := math.Cos(rad(center.Latitude))
 	sinLat := math.Sin(rad(center.Latitude))
 
 	cosNLon := math.Cos(rad(center.Longitude))
 	sinNLon := math.Sin(rad(center.Longitude))
-	cosNLat := math.Cos(rad(-center.Latitude))
-	sinNLat := math.Sin(rad(-center.Latitude))
+	cosNLat := math.Cos(-rad(center.Latitude))
+	sinNLat := math.Sin(-rad(center.Latitude))
 
 	return &Projection{
 		center: centerProjected,

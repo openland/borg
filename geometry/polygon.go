@@ -1,7 +1,6 @@
 package geometry
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -19,6 +18,13 @@ type Multipolygon2D struct {
 	Polygons []Polygon2D
 }
 
+type Bounds struct {
+	MinX float64
+	MinY float64
+	MaxX float64
+	MaxY float64
+}
+
 func NewProjectedSimplePolygon(points []PointGeo) Polygon2D {
 	p := NewSimpleGeoPolygon(points)
 	return p.Project(NewProjection(p.Center()))
@@ -34,6 +40,16 @@ func (poly Polygon2D) Edges() []float64 {
 		s1 := poly.Polygon[i]
 		s2 := poly.Polygon[(i+1)%len(poly.Polygon)]
 		res = append(res, s1.Distance(s2))
+	}
+	return res
+}
+
+func (poly Polygon2D) EdgesVectors() []Vector2D {
+	res := make([]Vector2D, 0)
+	for i := 0; i < len(poly.Polygon); i++ {
+		s1 := poly.Polygon[i]
+		s2 := poly.Polygon[(i+1)%len(poly.Polygon)]
+		res = append(res, Vector2D{Origin: s1, DX: s2.X - s1.X, DY: s2.Y - s1.Y})
 	}
 	return res
 }
@@ -60,6 +76,28 @@ func (poly Polygon2D) Angles() []float64 {
 		res = append(res, vectorAngle(poly.Polygon[i1], poly.Polygon[i2], poly.Polygon[i3]))
 	}
 	return res
+}
+
+func (poly Polygon2D) Bounds() Bounds {
+	maxX := -math.MaxFloat64
+	minX := math.MaxFloat64
+	maxY := -math.MaxFloat64
+	minY := math.MaxFloat64
+	for _, point := range poly.Polygon {
+		if point.X > maxX {
+			maxX = point.X
+		}
+		if point.X < minX {
+			minX = point.X
+		}
+		if point.Y > maxY {
+			maxY = point.Y
+		}
+		if point.Y < minY {
+			minY = point.Y
+		}
+	}
+	return Bounds{MinX: minX, MinY: minY, MaxX: maxX, MaxY: maxY}
 }
 
 func (poly Polygon2D) Azimuths() []float64 {
@@ -235,6 +273,90 @@ func (polygon Polygon2D) Contains(dst Polygon2D) bool {
 	return true
 }
 
+func (poly Polygon2D) RayIntersections(origin Point2D, dx float64, dy float64) (*Point2D, *Point2D) {
+
+	dl := math.Sqrt(dx*dx + dy*dy)
+	dx = dx / dl
+	dy = dy / dl
+
+	originPoint := Point2D{X: origin.X + eps*dx, Y: origin.Y + eps*dy}
+	x0 := originPoint.X
+	y0 := originPoint.Y
+	shiftedOrigin := Point2D{X: x0 + dx, Y: y0 + dy}
+	idx := 0
+	if math.Abs(shiftedOrigin.X-x0) < eps {
+		idx = 1
+	}
+	n := len(poly.Polygon)
+	b := poly.Polygon[n-1]
+	minSqDistLeft := math.MaxFloat64
+	minSqDistRight := math.MaxFloat64
+	var closestPointLeft *Point2D
+	var closestPointRight *Point2D
+	i := 0
+	for i < n {
+		a := b
+		b = poly.Polygon[i]
+		hasP, p := lineIntersection(originPoint, shiftedOrigin, a, b)
+		if hasP && pointInSegmentBox(p, a, b) {
+			sqDist := originPoint.DistanceSq(p)
+
+			pv := p.X
+			ov := originPoint.X
+			if idx == 1 {
+				pv = p.Y
+				ov = originPoint.Y
+			}
+
+			if pv < ov {
+				if sqDist < minSqDistLeft {
+					minSqDistLeft = sqDist
+					closestPointLeft = &p
+				}
+			} else if pv > ov {
+				if sqDist < minSqDistRight {
+					minSqDistRight = sqDist
+					closestPointRight = &p
+				}
+			}
+		}
+		i++
+	}
+	return closestPointLeft, closestPointRight
+}
+
+// intersectPoints = (poly, origin, alpha) ->
+//   eps = 1e-9
+//   origin = [origin[0] + eps*Math.cos(alpha), origin[1] + eps*Math.sin(alpha)]
+//   [x0, y0] = origin
+//   shiftedOrigin = [x0 + Math.cos(alpha), y0 + Math.sin(alpha)]
+
+//   idx = 0
+//   if Math.abs(shiftedOrigin[0] - x0) < eps then idx = 1
+//   i = -1
+//   n = poly.length
+//   b = poly[n-1]
+//   minSqDistLeft = Number.MAX_VALUE
+//   minSqDistRight = Number.MAX_VALUE
+//   closestPointLeft = null
+//   closestPointRight = null
+//   while ++i < n
+//     a = b
+//     b = poly[i]
+//     p = lineIntersection origin, shiftedOrigin, a, b
+//     if p? and pointInSegmentBox p, a, b
+//       sqDist = squaredDist origin, p
+//       if p[idx] < origin[idx]
+//         if sqDist < minSqDistLeft
+//           minSqDistLeft = sqDist
+//           closestPointLeft = p
+//       else if p[idx] > origin[idx]
+//         if sqDist < minSqDistRight
+//           minSqDistRight = sqDist
+//           closestPointRight = p
+
+//   return [closestPointLeft, closestPointRight]
+
 //
 // Debug
 //
@@ -249,7 +371,7 @@ func (poly Polygon2D) DebugString() string {
 		} else {
 			res = res + ","
 		}
-		res = res + fmt.Sprintf("(%.6f,%.6f)", point.X, point.Y)
+		res = res + point.DebugString()
 	}
 	return res
 }
