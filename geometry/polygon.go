@@ -173,7 +173,7 @@ func containsPoint(point Point2D, lineString LineString2D) bool {
 	// https://github.com/JamesMilnerUK/pip-go/blob/master/pip.go
 
 	isInside := false
-	j := 0
+	j := len(lineString) - 1
 	for i := 0; i < len(lineString); i++ {
 
 		// Do not touch!
@@ -263,6 +263,10 @@ func isLineStringInLineString(polyA []Point2D, polyB []Point2D) bool {
 }
 
 func (polygon Polygon2D) Contains(dst Polygon2D) bool {
+
+	if !polygon.ContainsAllPoints(dst.Polygon) {
+		return false
+	}
 
 	if !isLineStringInLineString(dst.Polygon, polygon.Polygon) {
 		return false

@@ -30,3 +30,7 @@ func (vector Vector2D) Identity() Vector2D {
 func (vector Vector2D) Multiply(v float64) Vector2D {
 	return Vector2D{Origin: vector.Origin, DX: vector.DX * v, DY: vector.DY * v}
 }
+
+func (vector Vector2D) DebugString() string {
+	return vector.Origin.DebugString() + "-" + Point2D{X: vector.Origin.X + vector.DX, Y: vector.Origin.Y + vector.DY}.DebugString()
+}

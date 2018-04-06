@@ -1,6 +1,7 @@
 package geometry
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -118,6 +119,25 @@ func TestPointTest(t *testing.T) {
 	assert.Equal(t, true, res)
 }
 
+func TestPolyInPoly(t *testing.T) {
+	parcel := NewSimplePolygon(
+		[]Point2D{
+			{2.194131, 13.191360},
+			{-2.194131, 12.857402},
+			{-0.506338, 10.853650},
+			{0.253170, -13.191360},
+		})
+	footprint := NewSimplePolygon(
+		[]Point2D{
+			{-3.6576 / 2, 10.668 / 2},
+			{3.6576 / 2, 10.668 / 2},
+			{3.6576 / 2, -10.668 / 2},
+			{-3.6576 / 2, -10.668 / 2},
+		}).
+		Rotate(4.052654523130833).
+		Shift(Point2D{-0.277551, 16.671435})
+	assert.False(t, parcel.Contains(footprint))
+}
 func TestPointHoles(t *testing.T) {
 	poly := Polygon2D{Polygon: []Point2D{
 		{0, 0},
@@ -132,6 +152,21 @@ func TestPointHoles(t *testing.T) {
 	}}}
 	res := poly.ContainsPoint(Point2D{0.5, 0.5})
 	assert.Equal(t, false, res)
+
+	res = poly.ContainsPoint(Point2D{2.5, 2.5})
+	assert.Equal(t, false, res)
+}
+
+func TestPointInPoly(t *testing.T) {
+	p := NewSimplePolygon([]Point2D{
+		{-5.946199, 8.126325},
+		{0.126515, -7.681045},
+		{1.222980, -8.126323},
+		{5.946203, 3.116948},
+	})
+	fmt.Println(p.DebugString())
+	assert.True(t, p.ContainsPoint(Point2D{-2.862660, 5.199420}))
+	assert.True(t, p.ContainsPoint(Point2D{0.963063, -4.758997}))
 }
 
 func TestIntersections(t *testing.T) {

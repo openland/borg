@@ -46,30 +46,45 @@ type Layout struct {
 
 //   return [closestPointLeft, closestPointRight]
 
-func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide float64) []geometry.Point2D {
-	res := make([]geometry.Point2D, 0)
-	edges := poly.EdgesVectors()
-	for _, e := range edges {
-		// l := e.Length()
+func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide float64) Layout {
+	for _, e := range poly.EdgesVectors() {
+		// Edge vector
+		id := e.Identity()
 
-		// Offsetting
-		offset := e.Normal().Identity().Multiply(smallSide)
-
-		// Forward
+		// Top side
+		offset := e.Normal().Identity().Multiply(-smallSide)
 		center := geometry.Point2D{X: e.Origin.X + offset.DX + e.DX/2, Y: e.Origin.Y + offset.DY + e.DY/2}
-		res = append(res, center)
+		// fmt.Println("Edge")
+		// fmt.Println("-" + e.DebugString())
+		// fmt.Println("-" + center.DebugString())
+
 		left, right := poly.RayIntersections(center, e.DX, e.DY)
 		if left != nil && right != nil {
-			res = append(res, geometry.Point2D{X: (left.X + right.X - offset.DX) / 2, Y: (left.Y + right.Y - offset.DY) / 2})
+			middle := geometry.Point2D{X: (left.X + right.X - offset.DX) / 2, Y: (left.Y + right.Y - offset.DY) / 2}
+			start := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
+			end := middle.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
+			// fmt.Println("Edge")
+			// fmt.Println("s" + start.DebugString())
+			// fmt.Println("e" + end.DebugString())
+			if poly.ContainsPoint(start) && poly.ContainsPoint(end) {
+				// fmt.Println("ok")
+				return Layout{
+					Analyzed:    true,
+					Fits:        true,
+					HasLocation: true,
+					Center:      geometry.Point2D{X: e.Origin.X + offset.DX/2 + e.DX/2, Y: e.Origin.Y + offset.DY/2 + e.DY/2},
+					Angle:       start.Azimuth(end),
+				}
+			}
 		}
 
 		// Backward
-		center = geometry.Point2D{X: e.Origin.X - offset.DX + e.DX/2, Y: e.Origin.Y - offset.DY + e.DY/2}
-		res = append(res, center)
-		left, right = poly.RayIntersections(center, e.DX, e.DY)
-		if left != nil && right != nil {
-			res = append(res, geometry.Point2D{X: (left.X + right.X - offset.DX) / 2, Y: (left.Y + right.Y - offset.DY) / 2})
-		}
+		// center = geometry.Point2D{X: e.Origin.X - offset.DX + e.DX/2, Y: e.Origin.Y - offset.DY + e.DY/2}
+		// res = append(res, center)
+		// left, right = poly.RayIntersections(center, e.DX, e.DY)
+		// if left != nil && right != nil {
+		// 	res = append(res, geometry.Point2D{X: (left.X + right.X - offset.DX) / 2, Y: (left.Y + right.Y - offset.DY) / 2})
+		// }
 
 		// fmt.Println("Edge")
 		// fmt.Println(e)
@@ -90,7 +105,7 @@ func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide floa
 
 		// shifted := e
 	}
-	return res
+	return Layout{Analyzed: true, Fits: false}
 }
 
 // func layoutEdgeAligned(poly geometry.Polygon2D, smallSide float64, largeSide float64) Layout {
@@ -175,12 +190,16 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 		{-smallSide / 2, -largeSide / 2},
 	})
 
+	// fmt.Println("Centers")
 	// Aligned to edge
-	for _, c := range loadEdgedCenters(poly, smallSide, largeSide) {
-		centers = append(centers, c)
+
+	res := loadEdgedCenters(poly, smallSide, largeSide)
+	if res.Fits {
+		return res
 	}
-	for _, c := range loadEdgedCenters(poly, largeSide, smallSide) {
-		centers = append(centers, c)
+	res = loadEdgedCenters(poly, largeSide, smallSide)
+	if res.Fits {
+		return res
 	}
 
 	// fmt.Println(centers)
