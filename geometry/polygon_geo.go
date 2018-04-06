@@ -164,7 +164,7 @@ func NewGeoPolygon(strings [][][]float64) PolygonGeo {
 	lineStrings := make([]LineStringGeo, 0)
 	for _, s := range strings {
 		points := make([]PointGeo, 0)
-		for i := 0; i < len(s); i++ {
+		for i := 0; i < len(s)-1; i++ {
 			points = append(points, PointGeo{Longitude: s[i][0], Latitude: s[i][1]})
 		}
 		lineStrings = append(lineStrings, points)
