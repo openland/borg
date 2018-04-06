@@ -66,6 +66,10 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 			{-smallSide / 2, -largeSide / 2},
 		})
 
+	//
+	// Fast Search
+	//
+
 	for i := 0; i < len(sideAngles); i++ {
 		r := rect.
 			Rotate(sideAngles[i]).
@@ -76,6 +80,24 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 				Analyzed: true, Fits: true, HasLocation: true,
 				Center: center,
 				Angle:  sideAngles[i]}
+		}
+	}
+
+	//
+	// Full Search
+	//
+
+	rotationIterations := 1000
+	for i := 0; i < rotationIterations; i++ {
+		alpha := float64(i) * math.Pi * 2 / float64(rotationIterations)
+		r := rect.
+			Rotate(alpha).
+			Shift(center)
+		if poly.Contains(r) {
+			return Layout{
+				Analyzed: true, Fits: true, HasLocation: true,
+				Center: center,
+				Angle:  alpha}
 		}
 	}
 

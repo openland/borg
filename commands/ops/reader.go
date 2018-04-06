@@ -252,7 +252,7 @@ func RecordTransformer(src string, dst string, handler func(row map[string]inter
 	var writerLock sync.Mutex
 	ctx := context.Background()
 	processes := int64(2 * runtime.NumCPU())
-	fmt.Printf("Running tranwformer in %d processes\n", processes)
+	fmt.Printf("Running transformer in %d processes\n", processes)
 	sem := semaphore.NewWeighted(processes)
 
 	var perror error

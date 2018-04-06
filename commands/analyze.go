@@ -38,6 +38,8 @@ func analyzeDataset(c *cli.Context) error {
 	trianglesCount := 0
 	rectangleCount := 0
 	fourPointCount := 0
+	element1 := 0
+	element2 := 0
 
 	e = ops.RecordTransformer(src, dst, func(row map[string]interface{}) (map[string]interface{}, error) {
 		totalCount++
@@ -128,6 +130,7 @@ func analyzeDataset(c *cli.Context) error {
 						extras.AppendFloat("project_kassita1_lon", center.Longitude)
 						extras.AppendFloat("project_kassita1_lat", center.Latitude)
 					}
+					element1++
 				} else {
 					extras.AppendString("project_kassita1", "false")
 				}
@@ -140,6 +143,7 @@ func analyzeDataset(c *cli.Context) error {
 						extras.AppendFloat("project_kassita2_lon", center.Longitude)
 						extras.AppendFloat("project_kassita2_lat", center.Latitude)
 					}
+					element2++
 				} else {
 					extras.AppendString("project_kassita2", "false")
 				}
@@ -168,6 +172,8 @@ func analyzeDataset(c *cli.Context) error {
 	fmt.Printf("-- With Holes: %d\n", withHolesCount)
 	fmt.Printf("-- Complex: %d\n", notConvex)
 	fmt.Printf("-- Total Not Analyzed: %d\n", notAnalyzed)
+	fmt.Printf("-- Element-1: %d\n", element1)
+	fmt.Printf("-- Element-2: %d\n", element2)
 	return nil
 }
 
