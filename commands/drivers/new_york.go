@@ -183,6 +183,15 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 			extras.AppendString("owner_type", "EXCLUDED")
 		}
 	}
+	if feature.Properties["LotArea"] != nil {
+		extras.AppendInt("assessor_area", int32(feature.Properties["LotArea"].(float64)))
+	}
+	if feature.Properties["LotFront"] != nil {
+		extras.AppendInt("assessor_front", int32(feature.Properties["LotFront"].(float64)))
+	}
+	if feature.Properties["LotDepth"] != nil {
+		extras.AppendInt("assessor_depth", int32(feature.Properties["LotDepth"].(float64)))
+	}
 	if feature.Properties["AssessLand"] != nil {
 		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
 	}
