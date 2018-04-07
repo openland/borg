@@ -184,7 +184,7 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		}
 	}
 	if feature.Properties["LotArea"] != nil {
-		extras.AppendInt("assessor_area", int32(utils.FeetToMeters((feature.Properties["LotArea"].(float64)))))
+		extras.AppendInt("assessor_area", int32(utils.SqFeetToMeters((feature.Properties["LotArea"].(float64)))))
 	}
 	if feature.Properties["LotFront"] != nil {
 		extras.AppendInt("assessor_front", int32(utils.FeetToMeters(feature.Properties["LotFront"].(float64))))
