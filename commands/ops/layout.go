@@ -72,24 +72,30 @@ func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide floa
 			// Calculate middle point by average of two intersectin points and substract half of edge offset
 			middle := geometry.Point2D{X: (left.X + right.X - offsetFromEdge.DX) / 2, Y: (left.Y + right.Y - offsetFromEdge.DY) / 2}
 			// Calculate opposite side of rectangle
-			start := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
-			end := middle.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
+			startCenter := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
+			endCenter := middle.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
+
+			startTop := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide), Y: id.DY * (-largeSide)})
+			endTop := middle.Shift(geometry.Point2D{X: id.DX * (largeSide), Y: id.DY * (largeSide)})
 
 			if enable_logs {
 				fmt.Println("Intersections")
 				fmt.Println("il" + left.DebugString())
 				fmt.Println("ir" + right.DebugString())
+				fmt.Printf("id %f \n", left.Distance(*right))
 				fmt.Println("m" + middle.DebugString())
-				fmt.Println("s" + start.DebugString())
-				fmt.Println("e" + end.DebugString())
+				fmt.Println("s" + startCenter.DebugString())
+				fmt.Println("e" + endCenter.DebugString())
+				fmt.Println("st" + startTop.DebugString())
+				fmt.Println("et" + endTop.DebugString())
 			}
 
 			// If all of them are in our poly
-			if poly.ContainsPoint(start) && poly.ContainsPoint(end) {
+			if poly.ContainsPoint(startCenter) && poly.ContainsPoint(endCenter) && poly.ContainsPoint(startTop) && poly.ContainsPoint(endTop) {
 				if enable_logs {
 					fmt.Println("ok")
 				}
-				a := start.Azimuth(end)
+				a := startCenter.Azimuth(endCenter)
 				if rotate {
 					a = a + math.Pi/2
 				}

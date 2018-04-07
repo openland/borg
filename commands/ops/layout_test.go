@@ -102,10 +102,9 @@ func testLayoutCaseF(t *testing.T, bbl string, str string, e1 bool, e2 bool) {
 
 	poly := loadParcel(str)
 
-	// fmt.Println(poly.DebugString())
+	fmt.Println(poly.DebugString())
 
 	// Kassita-1: 12ft x 35ft (3.6576 x 10.668)
-
 	layout := LayoutRectangle(poly, 3.6576, 10.668)
 	assert.True(t, layout.Analyzed, "Element1 "+bbl+" should be analyzed")
 	if layout.Analyzed {
@@ -113,6 +112,14 @@ func testLayoutCaseF(t *testing.T, bbl string, str string, e1 bool, e2 bool) {
 			assert.True(t, layout.Fits, "Element1 "+bbl+" should fit")
 			if layout.Fits {
 				assert.True(t, layout.HasLocation, "Element1 "+bbl+" should has location")
+
+				// footprint := geometry.NewSimplePolygon([]geometry.Point2D{
+				// 	{-3.6576 / 2, 10.668 / 2},
+				// 	{3.6576 / 2, 10.668 / 2},
+				// 	{3.6576 / 2, -10.668 / 2},
+				// 	{-3.6576 / 2, -10.668 / 2},
+				// }).Rotate(layout.Angle).Shift(layout.Center)
+				// assert.True(t, poly.Contains(footprint), "Element1 "+bbl+" layout should be within poly")
 			}
 		} else {
 			assert.False(t, layout.Fits, "Element1 "+bbl+" should NOT fit")
@@ -128,6 +135,14 @@ func testLayoutCaseF(t *testing.T, bbl string, str string, e1 bool, e2 bool) {
 				assert.True(t, layout.Fits, "Element2 "+bbl+" should fit")
 				if layout.Fits {
 					assert.True(t, layout.HasLocation, "Element2 "+bbl+" should has location")
+
+					// footprint := geometry.NewSimplePolygon([]geometry.Point2D{
+					// 	{X: -3.048 / 2, Y: 12.192 / 2},
+					// 	{X: 3.048 / 2, Y: 12.192 / 2},
+					// 	{X: 3.048 / 2, Y: -12.192 / 2},
+					// 	{X: -3.048 / 2, Y: -12.192 / 2},
+					// }).Rotate(layout.Angle).Shift(layout.Center)
+					// assert.True(t, poly.Contains(footprint), "Element2 "+bbl+" layout should be within poly")
 				}
 			} else {
 				assert.False(t, layout.Fits, "Element2 "+bbl+" should NOT fit")
@@ -211,6 +226,14 @@ func TestLayoutWorking(t *testing.T) {
 	testLayoutCase(t, "3-01317-0141", "[[[[-73.945989,40.663811],[-73.946223,40.663797],[-73.946215,40.663737],[-73.945982,40.663751],[-73.945989,40.663811]]]]")
 	testLayoutCase(t, "4-09948-0031", "[[[[-73.784436,40.71958],[-73.78474,40.719538],[-73.784427,40.719513],[-73.784436,40.71958]]]]")
 	testLayoutCase(t, "4-11212-0015", "[[[[-73.729003,40.705698],[-73.729256,40.705762],[-73.72926,40.705701],[-73.729003,40.705698]]]]")
+
+	//
+	// We had misaligned center here
+	//
+
+	testLayoutCase(t, "1-00846-0021", "[[[[-73.990348,40.737378],[-73.990333,40.737446],[-73.990657,40.737526],[-73.990667,40.737513],[-73.990348,40.737378]]]]")
+	// Complex shape and we have
+	testLayoutCase(t, "1-00817-0036", "[[[[-73.993561,40.737168],[-73.993495,40.73714],[-73.993447,40.737207],[-73.993468,40.737255],[-73.99352,40.737276],[-73.993708,40.737021],[-73.993678,40.737008],[-73.993561,40.737168]]]]")
 }
 
 func TestLayoutNegative(t *testing.T) {
@@ -224,43 +247,12 @@ func TestLayoutNegative(t *testing.T) {
 	testLayoutCaseNone(t, "4-15801-0010", "[[[[-73.759378,40.595632],[-73.759526,40.595683],[-73.759532,40.595617],[-73.759378,40.595632]]]]")
 	testLayoutCaseNone(t, "2-05084-0140", "[[[[-73.851362,40.901518],[-73.85131,40.901505],[-73.851284,40.901567],[-73.851335,40.901582],[-73.851362,40.901518]]]]")
 	testLayoutCaseNone(t, "4-12580-0154", "[[[[-73.766198,40.672551],[-73.766201,40.672572],[-73.766543,40.672556],[-73.76654,40.672528],[-73.766198,40.672551]]]]")
+
+	// Too small triangle
+	testLayoutCaseNone(t, "4-15801-0010", "[[[[-73.759378,40.595632],[-73.759526,40.595683],[-73.759532,40.595617],[-73.759378,40.595632]]]]")
 }
 
 func TestCornerCases(t *testing.T) {
-	// 1-00846-0021
-	poly := loadParcel("[[[[-73.990348,40.737378],[-73.990333,40.737446],[-73.990657,40.737526],[-73.990667,40.737513],[-73.990348,40.737378]]]]")
-	layout := LayoutRectangle(poly, 3.6576, 10.668)
-	fmt.Println(layout.Fits)
-	fmt.Println(poly.Area())
+	// Narrow triangle
+	// testLayoutCase(t, "1-01065-0132", "[[[[-73.98691,40.767126],[-73.986612,40.766955],[-73.986586,40.76699],[-73.98691,40.767126]]]]")
 }
-
-// func TestTriangle(t *testing.T) {
-
-// 	center := geometry.PointGeo{-73.7660865, 40.6980345}
-// 	proj := geometry.NewProjection(center)
-// 	projected := geometry.PointGeo{-73.765794, 40.698434}.Project(proj)
-// 	fmt.Println(projected.DebugString())
-
-// 	// poly := loadParcel("[[[[-73.760702,40.660659],[-73.760759,40.660729],[-73.76078,40.660667],[-73.760702,40.660659]]]]")
-// 	poly := loadParcel("[[[[-73.765794,40.698434],[-73.766437,40.697635],[-73.765736,40.698407],[-73.765794,40.698434]]]]")
-// 	fmt.Println(poly.DebugString())
-
-// 	fmt.Println("Normal")
-// 	centers := loadEdgedCenters(poly, 3.6576, 10.668)
-// 	fmt.Println(centers)
-// 	fmt.Println("Rotated")
-// 	centers = loadEdgedCenters(poly, 10.668, 3.6576)
-// 	fmt.Println(centers)
-// 	// poly := geometry.NewSimplePolygon([]geometry.Point2D{
-// 	// 	{10, 0},
-// 	// 	{-10, 0},
-// 	// 	{-20, 10},
-// 	// 	{20, 10},
-// 	// })
-// 	// layoutEdgeAligned(poly, 3, 6)
-// 	// triangle := loadParcel("[[[[-73.853571,40.740931],[-73.853499,40.740789],[-73.853486,40.740785],[-73.85343,40.740886],[-73.853571,40.740931]]]]")
-// 	// layout := layoutEdgeAligned(triangle, 3.6576, 10.668)
-// 	// assert.True(t, layout.Analyzed)
-// 	// assert.True(t, layout.Fits)
-// 	// assert.True(t, layout.HasLocation)
-// }
