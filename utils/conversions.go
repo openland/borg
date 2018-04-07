@@ -27,3 +27,11 @@ func ParseFloat4(coord []interface{}) [][][][]float64 {
 	}
 	return res
 }
+
+func FeetToMeters(src float64) float64 {
+	return src * 0.3048
+}
+
+func SqFeetToMeters(src float64) float64 {
+	return src * 0.3048 * 0.3048
+}
