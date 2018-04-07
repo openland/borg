@@ -94,6 +94,10 @@ func testLayoutCaseOnly2(t *testing.T, bbl string, str string) {
 	testLayoutCaseF(t, bbl, str, false, true)
 }
 
+func testLayoutCaseOnly1(t *testing.T, bbl string, str string) {
+	testLayoutCaseF(t, bbl, str, true, false)
+}
+
 func testLayoutCaseNone(t *testing.T, bbl string, str string) {
 	testLayoutCaseF(t, bbl, str, false, false)
 }
@@ -233,7 +237,7 @@ func TestLayoutWorking(t *testing.T) {
 
 	testLayoutCase(t, "1-00846-0021", "[[[[-73.990348,40.737378],[-73.990333,40.737446],[-73.990657,40.737526],[-73.990667,40.737513],[-73.990348,40.737378]]]]")
 	// Complex shape and we have
-	testLayoutCase(t, "1-00817-0036", "[[[[-73.993561,40.737168],[-73.993495,40.73714],[-73.993447,40.737207],[-73.993468,40.737255],[-73.99352,40.737276],[-73.993708,40.737021],[-73.993678,40.737008],[-73.993561,40.737168]]]]")
+	testLayoutCaseOnly1(t, "1-00817-0036", "[[[[-73.993561,40.737168],[-73.993495,40.73714],[-73.993447,40.737207],[-73.993468,40.737255],[-73.99352,40.737276],[-73.993708,40.737021],[-73.993678,40.737008],[-73.993561,40.737168]]]]")
 }
 
 func TestLayoutNegative(t *testing.T) {
