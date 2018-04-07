@@ -53,6 +53,24 @@ func NewSimplePolygon(points []Point2D) Polygon2D {
 // 	return res
 // }
 
+func circleArea(points []Point2D) float64 {
+	area := 0.0
+	j := len(points) - 1
+	for i := range points {
+		area += (points[j].X + points[i].X) * (points[j].Y - points[i].Y)
+		j = i
+	}
+	return math.Abs(area / 2)
+}
+
+func (poly Polygon2D) Area() float64 {
+	area := circleArea(poly.Polygon)
+	for _, h := range poly.Holes {
+		area -= circleArea(h)
+	}
+	return area
+}
+
 func (poly Polygon2D) Edges() []Edge2D {
 	res := make([]Edge2D, 0)
 	for i := 0; i < len(poly.Polygon); i++ {
