@@ -71,12 +71,13 @@ func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide floa
 		if left != nil && right != nil {
 			// Calculate middle point by average of two intersectin points and substract half of edge offset
 			middle := geometry.Point2D{X: (left.X + right.X - offsetFromEdge.DX) / 2, Y: (left.Y + right.Y - offsetFromEdge.DY) / 2}
+			middleTop := geometry.Point2D{X: (left.X+right.X)/2 - offsetFromEdge.DX, Y: (left.Y+right.Y)/2 - offsetFromEdge.DY}
 			// Calculate opposite side of rectangle
 			startCenter := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
 			endCenter := middle.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
 
-			startTop := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide), Y: id.DY * (-largeSide)})
-			endTop := middle.Shift(geometry.Point2D{X: id.DX * (largeSide), Y: id.DY * (largeSide)})
+			startTop := middleTop.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
+			endTop := middleTop.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
 
 			if enable_logs {
 				fmt.Println("Intersections")
