@@ -1,7 +1,6 @@
 package geometry
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -323,13 +322,13 @@ func (poly Polygon2D) RayIntersections(origin Point2D, dx float64, dy float64) (
 	minSqDistRight := math.MaxFloat64
 	var closestPointLeft *Point2D
 	var closestPointRight *Point2D
-	fmt.Println("Search Intersections")
-	fmt.Println("- Line: " + origin.DebugString() + " - " + shiftedOrigin.DebugString())
+	// fmt.Println("Search Intersections")
+	// fmt.Println("- Line: " + origin.DebugString() + " - " + shiftedOrigin.DebugString())
 	for _, e := range poly.Edges() {
-		fmt.Println("- Edge: " + e.Start.DebugString() + " - " + e.End.DebugString())
+		// fmt.Println("- Edge: " + e.Start.DebugString() + " - " + e.End.DebugString())
 		hasP, p := lineIntersection(origin, shiftedOrigin, e.Start, e.End)
 		if hasP && pointInSegmentBox(p, e.Start, e.End) {
-			fmt.Println("-- Point: " + p.DebugString())
+			// fmt.Println("-- Point: " + p.DebugString())
 			sqDist := origin.DistanceSq(p)
 
 			pv := p.X
