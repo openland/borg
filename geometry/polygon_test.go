@@ -63,10 +63,10 @@ func TestEdges(t *testing.T) {
 		{8.690202895388282, -1.2801690473393077},
 		{-5.230990022569944, 7.068789511576092}})
 	res := testPoly.Edges()
-	assert.InEpsilon(t, 16.2903, res[0], 0.0001)
-	assert.InEpsilon(t, 6.7434, res[1], 0.0001)
-	assert.InEpsilon(t, 16.2328, res[2], 0.0001)
-	assert.InEpsilon(t, 6.6481, res[3], 0.0001)
+	assert.InEpsilon(t, 16.2903, res[0].Length(), 0.0001)
+	assert.InEpsilon(t, 6.7434, res[1].Length(), 0.0001)
+	assert.InEpsilon(t, 16.2328, res[2].Length(), 0.0001)
+	assert.InEpsilon(t, 6.6481, res[3].Length(), 0.0001)
 }
 
 func TestGlobalAngle(t *testing.T) {

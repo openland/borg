@@ -1,6 +1,7 @@
 package geometry
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -16,6 +17,15 @@ type Polygon2D struct {
 // Multipolygon in 2D space
 type Multipolygon2D struct {
 	Polygons []Polygon2D
+}
+
+type Edge2D struct {
+	len         float64
+	lenCached   bool
+	lenSq       float64
+	lenSqCached bool
+	Start       Point2D
+	End         Point2D
 }
 
 type Bounds struct {
@@ -34,14 +44,40 @@ func NewSimplePolygon(points []Point2D) Polygon2D {
 	return Polygon2D{Polygon: points, Holes: [][]Point2D{}}
 }
 
-func (poly Polygon2D) Edges() []float64 {
-	res := make([]float64, 0)
+// func (poly Polygon2D) Edges() []float64 {
+// 	res := make([]float64, 0)
+// 	for i := 0; i < len(poly.Polygon); i++ {
+// 		s1 := poly.Polygon[i]
+// 		s2 := poly.Polygon[(i+1)%len(poly.Polygon)]
+// 		res = append(res, s1.Distance(s2))
+// 	}
+// 	return res
+// }
+
+func (poly Polygon2D) Edges() []Edge2D {
+	res := make([]Edge2D, 0)
 	for i := 0; i < len(poly.Polygon); i++ {
 		s1 := poly.Polygon[i]
 		s2 := poly.Polygon[(i+1)%len(poly.Polygon)]
-		res = append(res, s1.Distance(s2))
+		res = append(res, Edge2D{Start: s1, End: s2})
 	}
 	return res
+}
+
+func (edge Edge2D) LengthSq() float64 {
+	if !edge.lenSqCached {
+		edge.lenSq = edge.Start.DistanceSq(edge.End)
+		edge.lenSqCached = true
+	}
+	return edge.lenSq
+}
+
+func (edge Edge2D) Length() float64 {
+	if !edge.lenCached {
+		edge.len = math.Sqrt(edge.LengthSq())
+		edge.lenSqCached = false
+	}
+	return edge.len
 }
 
 func (poly Polygon2D) EdgesVectors() []Vector2D {
@@ -278,38 +314,29 @@ func (polygon Polygon2D) Contains(dst Polygon2D) bool {
 }
 
 func (poly Polygon2D) RayIntersections(origin Point2D, dx float64, dy float64) (*Point2D, *Point2D) {
-
-	dl := math.Sqrt(dx*dx + dy*dy)
-	dx = dx / dl
-	dy = dy / dl
-
-	originPoint := Point2D{X: origin.X + eps*dx, Y: origin.Y + eps*dy}
-	x0 := originPoint.X
-	y0 := originPoint.Y
-	shiftedOrigin := Point2D{X: x0 + dx, Y: y0 + dy}
-	idx := 0
-	if math.Abs(shiftedOrigin.X-x0) < eps {
-		idx = 1
+	shiftedOrigin := Point2D{X: origin.X + dx, Y: origin.Y + dy}
+	useX := true
+	if math.Abs(shiftedOrigin.X-origin.X) < eps {
+		useX = false
 	}
-	n := len(poly.Polygon)
-	b := poly.Polygon[n-1]
 	minSqDistLeft := math.MaxFloat64
 	minSqDistRight := math.MaxFloat64
 	var closestPointLeft *Point2D
 	var closestPointRight *Point2D
-	i := 0
-	for i < n {
-		a := b
-		b = poly.Polygon[i]
-		hasP, p := lineIntersection(originPoint, shiftedOrigin, a, b)
-		if hasP && pointInSegmentBox(p, a, b) {
-			sqDist := originPoint.DistanceSq(p)
+	fmt.Println("Search Intersections")
+	fmt.Println("- Line: " + origin.DebugString() + " - " + shiftedOrigin.DebugString())
+	for _, e := range poly.Edges() {
+		fmt.Println("- Edge: " + e.Start.DebugString() + " - " + e.End.DebugString())
+		hasP, p := lineIntersection(origin, shiftedOrigin, e.Start, e.End)
+		if hasP && pointInSegmentBox(p, e.Start, e.End) {
+			fmt.Println("-- Point: " + p.DebugString())
+			sqDist := origin.DistanceSq(p)
 
 			pv := p.X
-			ov := originPoint.X
-			if idx == 1 {
+			ov := origin.X
+			if !useX {
 				pv = p.Y
-				ov = originPoint.Y
+				ov = origin.Y
 			}
 
 			if pv < ov {
@@ -324,7 +351,6 @@ func (poly Polygon2D) RayIntersections(origin Point2D, dx float64, dy float64) (
 				}
 			}
 		}
-		i++
 	}
 	return closestPointLeft, closestPointRight
 }

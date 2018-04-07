@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/statecrafthq/borg/geometry"
@@ -11,6 +12,7 @@ type Layout struct {
 	Fits        bool
 	HasLocation bool
 	Center      geometry.Point2D
+	Footprint   geometry.Polygon2D
 	Angle       float64
 }
 
@@ -46,34 +48,61 @@ type Layout struct {
 
 //   return [closestPointLeft, closestPointRight]
 
-func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide float64) Layout {
+const enable_logs = false
+
+func loadEdgedCenters(poly geometry.Polygon2D, smallSide float64, largeSide float64, rotate bool) Layout {
 	for _, e := range poly.EdgesVectors() {
-		// Edge vector
+		// Edge identity vector
 		id := e.Identity()
+		// Offset from edge to opposite side of rectangle
+		offsetFromEdge := e.Normal().Identity().Multiply(-smallSide)
+		// Raycast center
+		center := geometry.Point2D{X: e.Origin.X + offsetFromEdge.DX + e.DX/2, Y: e.Origin.Y + offsetFromEdge.DY + e.DY/2}
 
-		// Top side
-		offset := e.Normal().Identity().Multiply(-smallSide)
-		center := geometry.Point2D{X: e.Origin.X + offset.DX + e.DX/2, Y: e.Origin.Y + offset.DY + e.DY/2}
-		// fmt.Println("Edge")
-		// fmt.Println("-" + e.DebugString())
-		// fmt.Println("-" + center.DebugString())
-
+		// Doing Raycasting parallel to our edge
 		left, right := poly.RayIntersections(center, e.DX, e.DY)
+
+		if enable_logs {
+			fmt.Println("Edge")
+			fmt.Println("-" + e.DebugString())
+			fmt.Println("-" + center.DebugString())
+		}
+
 		if left != nil && right != nil {
-			middle := geometry.Point2D{X: (left.X + right.X - offset.DX) / 2, Y: (left.Y + right.Y - offset.DY) / 2}
+			// Calculate middle point by average of two intersectin points and substract half of edge offset
+			middle := geometry.Point2D{X: (left.X + right.X - offsetFromEdge.DX) / 2, Y: (left.Y + right.Y - offsetFromEdge.DY) / 2}
+			// Calculate opposite side of rectangle
 			start := middle.Shift(geometry.Point2D{X: id.DX * (-largeSide / 2), Y: id.DY * (-largeSide / 2)})
 			end := middle.Shift(geometry.Point2D{X: id.DX * (largeSide / 2), Y: id.DY * (largeSide / 2)})
-			// fmt.Println("Edge")
-			// fmt.Println("s" + start.DebugString())
-			// fmt.Println("e" + end.DebugString())
+
+			if enable_logs {
+				fmt.Println("Intersections")
+				fmt.Println("il" + left.DebugString())
+				fmt.Println("ir" + right.DebugString())
+				fmt.Println("m" + middle.DebugString())
+				fmt.Println("s" + start.DebugString())
+				fmt.Println("e" + end.DebugString())
+			}
+
+			// If all of them are in our poly
 			if poly.ContainsPoint(start) && poly.ContainsPoint(end) {
-				// fmt.Println("ok")
+				if enable_logs {
+					fmt.Println("ok")
+				}
+				a := start.Azimuth(end)
+				if rotate {
+					a = a + math.Pi/2
+				}
 				return Layout{
 					Analyzed:    true,
 					Fits:        true,
 					HasLocation: true,
-					Center:      geometry.Point2D{X: e.Origin.X + offset.DX/2 + e.DX/2, Y: e.Origin.Y + offset.DY/2 + e.DY/2},
-					Angle:       start.Azimuth(end),
+					Center:      middle,
+					Angle:       a,
+				}
+			} else {
+				if enable_logs {
+					fmt.Println("failed")
 				}
 			}
 		}
@@ -155,8 +184,8 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 	// Fast-handling of rectangles
 	if t == geometry.TypeRectangle {
 		sides := poly.Edges()
-		side1 := (sides[0] + sides[2]) / 2
-		side2 := (sides[1] + sides[3]) / 2
+		side1 := (sides[0].Length() + sides[2].Length()) / 2
+		side2 := (sides[1].Length() + sides[3].Length()) / 2
 		// Second side is inverted to make them aligned
 		angle1 := (poly.Polygon[0].Azimuth(poly.Polygon[1]) + poly.Polygon[3].Azimuth(poly.Polygon[2])) / 2
 		angle2 := (poly.Polygon[1].Azimuth(poly.Polygon[2]) + poly.Polygon[0].Azimuth(poly.Polygon[3])) / 2
@@ -166,8 +195,8 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 		} else {
 			mainAngle = angle2
 		}
-		small := math.Min((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
-		large := math.Max((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
+		small := math.Min((sides[0].Length()+sides[2].Length())/2, (sides[1].Length()+sides[3].Length())/2)
+		large := math.Max((sides[0].Length()+sides[2].Length())/2, (sides[1].Length()+sides[3].Length())/2)
 
 		if small > smallSide && large > largeSide {
 			return Layout{
@@ -193,11 +222,11 @@ func LayoutRectangle(poly geometry.Polygon2D, width float64, height float64) Lay
 	// fmt.Println("Centers")
 	// Aligned to edge
 
-	res := loadEdgedCenters(poly, smallSide, largeSide)
+	res := loadEdgedCenters(poly, smallSide, largeSide, false)
 	if res.Fits {
 		return res
 	}
-	res = loadEdgedCenters(poly, largeSide, smallSide)
+	res = loadEdgedCenters(poly, largeSide, smallSide, true)
 	if res.Fits {
 		return res
 	}

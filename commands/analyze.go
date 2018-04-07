@@ -77,16 +77,16 @@ func analyzeDataset(c *cli.Context) error {
 					// Upgrade field data
 					sides := poly.Edges()
 					extras.AppendString("shape_type", "triangle")
-					extras.AppendFloat("side1", sides[0])
-					extras.AppendFloat("side2", sides[1])
-					extras.AppendFloat("side3", sides[2])
+					extras.AppendFloat("side1", sides[0].Length())
+					extras.AppendFloat("side2", sides[1].Length())
+					extras.AppendFloat("side3", sides[2].Length())
 				} else if t == geometry.TypeRectangle {
 					rectangleCount++
 					fourPointCount++
 					// Upgrade field data
 					sides := poly.Edges()
-					small := math.Min((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
-					large := math.Max((sides[0]+sides[2])/2, (sides[1]+sides[3])/2)
+					small := math.Min((sides[0].Length()+sides[2].Length())/2, (sides[1].Length()+sides[3].Length())/2)
+					large := math.Max((sides[0].Length()+sides[2].Length())/2, (sides[1].Length()+sides[3].Length())/2)
 					extras.AppendString("shape_type", "rectangle")
 					extras.AppendFloat("side1", large)
 					extras.AppendFloat("side2", small)
@@ -95,10 +95,10 @@ func analyzeDataset(c *cli.Context) error {
 					// Upgrade field data
 					sides := poly.Edges()
 					extras.AppendString("shape_type", "quadriliteral")
-					extras.AppendFloat("side1", sides[0])
-					extras.AppendFloat("side2", sides[1])
-					extras.AppendFloat("side3", sides[2])
-					extras.AppendFloat("side4", sides[3])
+					extras.AppendFloat("side1", sides[0].Length())
+					extras.AppendFloat("side2", sides[1].Length())
+					extras.AppendFloat("side3", sides[2].Length())
+					extras.AppendFloat("side4", sides[3].Length())
 				} else if t == geometry.TypeConvexPolygon {
 					extras.AppendString("shape_type", "convex")
 				} else if t == geometry.TypeBroken {

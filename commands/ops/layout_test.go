@@ -211,6 +211,14 @@ func TestUrbynNotWorking(t *testing.T) {
 	// testUrbynCase(t, "4-12580-0154", "[[[[-73.766198,40.672551],[-73.766201,40.672572],[-73.766543,40.672556],[-73.76654,40.672528],[-73.766198,40.672551]]]]")
 }
 
+func TestCornerCases(t *testing.T) {
+	// 1-00846-0021
+	poly := loadParcel("[[[[-73.990348,40.737378],[-73.990333,40.737446],[-73.990657,40.737526],[-73.990667,40.737513],[-73.990348,40.737378]]]]")
+	fmt.Println(poly.DebugString())
+	layout := LayoutRectangle(poly, 3.6576, 10.668)
+	fmt.Println(layout.Fits)
+}
+
 // func TestTriangle(t *testing.T) {
 
 // 	center := geometry.PointGeo{-73.7660865, 40.6980345}
