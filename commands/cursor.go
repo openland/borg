@@ -93,7 +93,7 @@ func cursorGet(c *cli.Context) error {
 	}
 
 	// Exporting key
-	err = ops.WriteStatusToFile(key, cursor.Hash, cursor.Latest)
+	err = ops.WriteStatusToFile(key, latestCursor.Hash, latestCursor.Latest)
 	if err != nil {
 		return err
 	}
