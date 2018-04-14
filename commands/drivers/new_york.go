@@ -195,6 +195,53 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	if feature.Properties["AssessLand"] != nil {
 		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
 	}
+
+	// Borough
+	var borough string
+	hasBorough := false
+	if feature.Properties["BORO"] != nil {
+		borough = feature.Properties["BORO"].(string)
+		hasBorough = true
+	} else if feature.Properties["Borough"] != nil {
+		boroughKey := strings.ToLower(feature.Properties["Borough"].(string))
+		switch boroughKey {
+		case "qn":
+			borough = "4"
+			hasBorough = true
+		case "mn":
+			borough = "1"
+			hasBorough = true
+		case "bx":
+			borough = "2"
+			hasBorough = true
+		case "bk":
+			borough = "3"
+			hasBorough = true
+		case "si":
+			borough = "5"
+			hasBorough = true
+		}
+	}
+	if hasBorough {
+		switch borough {
+		case "1":
+			extras.AppendInt("borough_id", 1)
+			extras.AppendString("borough_name", "Manhattan")
+		case "2":
+			extras.AppendInt("borough_id", 2)
+			extras.AppendString("borough_name", "Bronx")
+		case "3":
+			extras.AppendInt("borough_id", 3)
+			extras.AppendString("borough_name", "Brooklyn")
+		case "4":
+			extras.AppendInt("borough_id", 4)
+			extras.AppendString("borough_name", "Queens")
+		case "5":
+			extras.AppendInt("borough_id", 5)
+			extras.AppendString("borough_name", "Staten Island")
+		}
+	}
+
 	return nil
 }
 
