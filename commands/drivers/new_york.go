@@ -184,13 +184,13 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		}
 	}
 	if feature.Properties["LotArea"] != nil {
-		extras.AppendInt("assessor_area", int32(utils.SqFeetToMeters((feature.Properties["LotArea"].(float64)))))
+		extras.AppendFloat("assessor_area", utils.SqFeetToMeters((feature.Properties["LotArea"].(float64))))
 	}
 	if feature.Properties["LotFront"] != nil {
-		extras.AppendInt("assessor_front", int32(utils.FeetToMeters(feature.Properties["LotFront"].(float64))))
+		extras.AppendFloat("assessor_front", utils.FeetToMeters(feature.Properties["LotFront"].(float64)))
 	}
 	if feature.Properties["LotDepth"] != nil {
-		extras.AppendInt("assessor_depth", int32(utils.FeetToMeters(feature.Properties["LotDepth"].(float64))))
+		extras.AppendFloat("assessor_depth", utils.FeetToMeters(feature.Properties["LotDepth"].(float64)))
 	}
 	if feature.Properties["AssessLand"] != nil {
 		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
