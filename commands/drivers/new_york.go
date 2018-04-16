@@ -242,6 +242,18 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		}
 	}
 
+	// BBL
+	var bbl string
+	switch v := feature.Properties["BBL"].(type) {
+	case string:
+		bbl = v
+	case float64:
+		bbl = strconv.FormatInt(int64(v), 10)
+	default:
+		return errors.New("Unsupported BBL value")
+	}
+	extras.AppendString("nyc_bbl", bbl)
+
 	return nil
 }
 
