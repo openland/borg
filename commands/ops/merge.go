@@ -70,7 +70,7 @@ func hasKey(extras map[string]interface{}, key string) bool {
 	return false
 }
 
-func mergeExtrasType(a interface{}, b interface{}) []interface{} {
+func mergeExtrasType(a interface{}, b interface{}, allKeys map[string]bool) []interface{} {
 	res := make([]interface{}, 0)
 	added := make(map[string]bool)
 	if b != nil {
@@ -91,7 +91,8 @@ func mergeExtrasType(a interface{}, b interface{}) []interface{} {
 			r := v.(map[string]interface{})
 			key := r["key"].(string)
 			_, present := added[key]
-			if !present {
+			_, present2 := allKeys[key]
+			if !present && !present2 {
 				added[key] = true
 				res = append(res, v)
 			}
@@ -102,17 +103,46 @@ func mergeExtrasType(a interface{}, b interface{}) []interface{} {
 
 func MergeExtras(a map[string]interface{}, b map[string]interface{}) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
+	allKeys := make(map[string]bool)
+	if b["floats"] != nil {
+		for _, v := range b["floats"].([]interface{}) {
+			r := v.(map[string]interface{})
+			key := r["key"].(string)
+			allKeys[key] = true
+		}
+	}
+	if b["ints"] != nil {
+		for _, v := range b["ints"].([]interface{}) {
+			r := v.(map[string]interface{})
+			key := r["key"].(string)
+			allKeys[key] = true
+		}
+	}
+	if b["strings"] != nil {
+		for _, v := range b["strings"].([]interface{}) {
+			r := v.(map[string]interface{})
+			key := r["key"].(string)
+			allKeys[key] = true
+		}
+	}
+	if b["enums"] != nil {
+		for _, v := range b["enums"].([]interface{}) {
+			r := v.(map[string]interface{})
+			key := r["key"].(string)
+			allKeys[key] = true
+		}
+	}
 	if a["floats"] != nil || b["floats"] != nil {
-		res["floats"] = mergeExtrasType(a["floats"], b["floats"])
+		res["floats"] = mergeExtrasType(a["floats"], b["floats"], allKeys)
 	}
 	if a["ints"] != nil || b["ints"] != nil {
-		res["ints"] = mergeExtrasType(a["ints"], b["ints"])
+		res["ints"] = mergeExtrasType(a["ints"], b["ints"], allKeys)
 	}
 	if a["strings"] != nil || b["strings"] != nil {
-		res["strings"] = mergeExtrasType(a["strings"], b["strings"])
+		res["strings"] = mergeExtrasType(a["strings"], b["strings"], allKeys)
 	}
 	if a["enums"] != nil || b["enums"] != nil {
-		res["enums"] = mergeExtrasType(a["enums"], b["enums"])
+		res["enums"] = mergeExtrasType(a["enums"], b["enums"], allKeys)
 	}
 	return res, nil
 }

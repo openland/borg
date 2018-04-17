@@ -125,3 +125,9 @@ func TestGeometryMerge(t *testing.T) {
 	assertMerge(t, `{"geometry":[[[[1,1]]]],"$geometry_src":[[[[1,2]]]]}`, `{"geometry":[[[[1,2]]]],"$geometry_src":[[[[1,2]]]]}`, `{"geometry":[[[[1,2]]]],"$geometry_src":[[[[1,2]]]]}`)
 	assertMerge(t, `{"geometry":[[[[1,1]]]],"$geometry_src":[[[[1,2]]]]}`, `{"geometry":[[[[1,2]]]],"$geometry_src":[[[[1,2]]]]}`, `{"geometry":[[[[1,2]]]],"$geometry_src":[[[[1,2]]]]}`)
 }
+func TestFieldTypeChange(t *testing.T) {
+	assertMerge(t,
+		`{"extras": {"ints":[{"key": "key_1", "value": 123 }]}}`,
+		`{"extras": {"floats":[{"key": "key_1", "value": 123 }]}}`,
+		`{"extras": {"floats":[{"key": "key_1", "value": 123 }],"ints":[]}}`)
+}
