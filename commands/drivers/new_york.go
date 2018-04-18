@@ -162,7 +162,40 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		extras.AppendString("address", feature.Properties["Address"].(string))
 	}
 	if feature.Properties["OwnerName"] != nil {
-		extras.AppendString("owner_name", feature.Properties["OwnerName"].(string))
+		name := feature.Properties["OwnerName"].(string)
+		extras.AppendString("owner_name", name)
+
+		// Simple tokenizer
+		nameTokenized := name
+		nameTokenized = strings.Replace(nameTokenized, "/", " ", -1)
+		nameTokenized = strings.Replace(nameTokenized, "\\", " ", -1)
+		nameTokenized = strings.Replace(nameTokenized, "(", " ", -1)
+		nameTokenized = strings.Replace(nameTokenized, ")", " ", -1)
+		nameTokenized = strings.Replace(nameTokenized, ".", " ", -1)
+		for strings.Contains(nameTokenized, "  ") {
+			nameTokenized = strings.Replace(nameTokenized, "  ", " ", -1)
+		}
+		// tokens := strings.Split(nameTokenized, " ")
+
+		// Query 1
+		if (strings.Contains(nameTokenized, "department of") || strings.Contains(nameTokenized, "dept of")) &&
+			!strings.Contains(nameTokenized, "urban") &&
+			!strings.Contains(nameTokenized, "hud") &&
+			!strings.Contains(nameTokenized, "inc") &&
+			!strings.Contains(nameTokenized, "corp") &&
+			!strings.Contains(nameTokenized, "llc") {
+			extras.AppendString("urbyn_query_1", "true")
+		} else {
+			extras.AppendString("urbyn_query_1", "false")
+		}
+
+		if (strings.Contains(nameTokenized, "city of new york") || strings.Contains(nameTokenized, "city of ny") || strings.Contains(nameTokenized, "city of n y")) &&
+			!strings.Contains(nameTokenized, "inc") &&
+			!strings.Contains(nameTokenized, "corp") {
+			extras.AppendString("urbyn_query_2", "true")
+		} else {
+			extras.AppendString("urbyn_query_2", "false")
+		}
 	}
 	if feature.Properties["OwnerType"] != nil {
 
