@@ -166,7 +166,7 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		extras.AppendString("owner_name", name)
 
 		// Simple tokenizer
-		nameTokenized := name
+		nameTokenized := strings.ToLower(name)
 		nameTokenized = strings.Replace(nameTokenized, "/", " ", -1)
 		nameTokenized = strings.Replace(nameTokenized, "\\", " ", -1)
 		nameTokenized = strings.Replace(nameTokenized, "(", " ", -1)
