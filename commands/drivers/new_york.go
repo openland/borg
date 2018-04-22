@@ -161,7 +161,10 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	if feature.Properties["Address"] != nil {
 		extras.AppendString("address", feature.Properties["Address"].(string))
 	}
+	isPublic := false
+	isPublicHandled := false
 	if feature.Properties["OwnerName"] != nil {
+		isPublicHandled = true
 		name := feature.Properties["OwnerName"].(string)
 		extras.AppendString("owner_name", name)
 
@@ -185,6 +188,7 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 			!strings.Contains(nameTokenized, "corp") &&
 			!strings.Contains(nameTokenized, "llc") {
 			extras.AppendString("urbyn_query_1", "true")
+			isPublic = true
 		} else {
 			extras.AppendString("urbyn_query_1", "false")
 		}
@@ -194,6 +198,7 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 			!strings.Contains(nameTokenized, "inc") &&
 			!strings.Contains(nameTokenized, "corp") {
 			extras.AppendString("urbyn_query_2", "true")
+			isPublic = true
 		} else {
 			extras.AppendString("urbyn_query_2", "false")
 		}
@@ -214,14 +219,16 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		}
 		if has {
 			extras.AppendString("urbyn_query_3", "true")
+			isPublic = true
 		} else {
 			extras.AppendString("urbyn_query_3", "false")
 		}
 	}
 	if feature.Properties["OwnerType"] != nil {
-
+		isPublicHandled = true
 		if feature.Properties["OwnerType"] == "C" {
 			extras.AppendString("owner_type", "CITY")
+			isPublic = true
 		}
 		if feature.Properties["OwnerType"] == "M" {
 			extras.AppendString("owner_type", "MIXED")
@@ -235,6 +242,13 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		}
 		if feature.Properties["OwnerType"] == "X" {
 			extras.AppendString("owner_type", "EXCLUDED")
+		}
+	}
+	if isPublicHandled {
+		if isPublic {
+			extras.AppendString("owner_public", "true")
+		} else {
+			extras.AppendString("owner_public", "false")
 		}
 	}
 	if feature.Properties["LotArea"] != nil {
