@@ -175,7 +175,7 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		for strings.Contains(nameTokenized, "  ") {
 			nameTokenized = strings.Replace(nameTokenized, "  ", " ", -1)
 		}
-		// tokens := strings.Split(nameTokenized, " ")
+		tokens := strings.Split(nameTokenized, " ")
 
 		// Query 1
 		if (strings.Contains(nameTokenized, "department of") || strings.Contains(nameTokenized, "dept of")) &&
@@ -189,12 +189,33 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 			extras.AppendString("urbyn_query_1", "false")
 		}
 
+		// Query 2
 		if (strings.Contains(nameTokenized, "city of new york") || strings.Contains(nameTokenized, "city of ny") || strings.Contains(nameTokenized, "city of n y")) &&
 			!strings.Contains(nameTokenized, "inc") &&
 			!strings.Contains(nameTokenized, "corp") {
 			extras.AppendString("urbyn_query_2", "true")
 		} else {
 			extras.AppendString("urbyn_query_2", "false")
+		}
+
+		// Query 3
+		q3Names := []string{"dsbs", "doe", "hpd", "dsny", "nypd", "dhs", "doh", "dcas", "dep", "ddc", "nypl", "dof", "fdny", "nycedc", "hra"}
+		has := false
+		for _, t := range tokens {
+			for _, q3 := range q3Names {
+				if q3 == t {
+					has = true
+					break
+				}
+			}
+			if has {
+				break
+			}
+		}
+		if has {
+			extras.AppendString("urbyn_query_3", "true")
+		} else {
+			extras.AppendString("urbyn_query_3", "false")
 		}
 	}
 	if feature.Properties["OwnerType"] != nil {
