@@ -223,6 +223,24 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 		} else {
 			extras.AppendString("urbyn_query_3", "false")
 		}
+
+		// Extra condisions
+		q4Names := []string{"dot", "lirr", "nyc", "nys"}
+		has = false
+		for _, t := range tokens {
+			for _, q3 := range q4Names {
+				if q3 == t {
+					has = true
+					break
+				}
+			}
+			if has {
+				break
+			}
+		}
+		if has {
+			isPublic = true
+		}
 	}
 	if feature.Properties["OwnerType"] != nil {
 		isPublicHandled = true
