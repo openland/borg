@@ -3,6 +3,7 @@ package drivers
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -121,11 +122,11 @@ func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 }
 
 func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
+	zoning := []string{}
 	if feature.Properties["ZoneDist1"] != nil ||
 		feature.Properties["ZoneDist2"] != nil ||
 		feature.Properties["ZoneDist3"] != nil ||
 		feature.Properties["ZoneDist4"] != nil {
-		zoning := []string{}
 		if feature.Properties["ZoneDist1"] != nil {
 			zoning = append(zoning, feature.Properties["ZoneDist1"].(string))
 		}
@@ -269,7 +270,9 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 			extras.AppendString("owner_public", "false")
 		}
 	}
+	area := 0.0
 	if feature.Properties["LotArea"] != nil {
+		area = feature.Properties["LotArea"].(float64)
 		extras.AppendFloat("assessor_area", utils.SqFeetToMeters((feature.Properties["LotArea"].(float64))))
 	}
 	if feature.Properties["LotFront"] != nil {
@@ -280,6 +283,53 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	}
 	if feature.Properties["AssessLand"] != nil {
 		extras.AppendInt("land_value", int32(feature.Properties["AssessLand"].(float64)))
+	}
+
+	// Capacity
+	if area > 0 && len(zoning) > 0 {
+		maxCapacity := 0
+		zoningData := NYCZoning()
+		for _, z := range zoning {
+			for _, zs := range strings.Split(z, "/") {
+
+				// Normalizing zoning codes
+				normalized := zs
+				if normalized == "R1" {
+					normalized = "R1-1"
+				}
+				if normalized == "R6" {
+					normalized = "R6QH"
+				}
+
+				// Calculation of capacity
+				if zd, ok := zoningData.Zoning[normalized]; ok {
+					if zd.DensityFactor > 0 && zd.MaximumFARNarrow > 0 {
+
+						// Base formula
+						capacity := area * zd.MaximumFARNarrow / zd.DensityFactor
+
+						// Round down for .74
+						// Round up for .75+
+						if (capacity - float64(int(capacity))) <= 0.74 {
+							capacity = math.Floor(capacity)
+						} else {
+							capacity = math.Ceil(capacity)
+						}
+
+						// Additional rule: If area < 1700 sf > max units <= 2
+						if area < 1700 {
+							capacity = math.Min(2, capacity)
+						}
+
+						// Save result
+						if int(capacity) > maxCapacity {
+							maxCapacity = int(capacity)
+						}
+					}
+				}
+			}
+		}
+		extras.AppendInt("unit_capacity", int32(maxCapacity))
 	}
 
 	// Borough
