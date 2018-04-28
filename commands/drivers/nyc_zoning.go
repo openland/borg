@@ -2,6 +2,7 @@ package drivers
 
 import (
 	"encoding/json"
+	"log"
 )
 
 type NYCZoningMetrics struct {
@@ -12,7 +13,7 @@ type NYCZoningMetrics struct {
 }
 
 type NYCZoningData struct {
-	Zoning map[string]NYCZoningMetrics `json:"zonning"`
+	Zoning map[string]NYCZoningMetrics `json:"zoning"`
 }
 
 var nycZoningJson = `{
@@ -571,8 +572,8 @@ var nycZoningJson = `{
             "metric10": "-",
             "metric11": "-",
             "metric12": 400,
-            "metric13": "0.78-2.43",
-            "metric14": "0.78-2.43",
+            "metric13": 2.43,
+            "metric14": 2.43,
             "metric15": "-",
             "metric16": "-",
             "metric17": 0.7,
@@ -679,8 +680,8 @@ var nycZoningJson = `{
             "metric10": "-",
             "metric11": "-",
             "metric12": 400,
-            "metric13": "0.87-3.44",
-            "metric14": "0.87-3.44",
+            "metric13": 3.44,
+            "metric14": 3.44,
             "metric15": "-",
             "metric16": "-",
             "metric17": 0.6,
@@ -868,8 +869,8 @@ var nycZoningJson = `{
             "metric10": "-",
             "metric11": "-",
             "metric12": 400,
-            "metric13": "0.94-6.02",
-            "metric14": "0.94-6.02",
+            "metric13": 6.02,
+            "metric14": 6.02,
             "metric15": "-",
             "metric16": "-",
             "metric17": 0.4,
@@ -1003,8 +1004,8 @@ var nycZoningJson = `{
             "metric10": "-",
             "metric11": "-",
             "metric12": 400,
-            "metric13": "0.99-7.52",
-            "metric14": "0.99-7.52",
+            "metric13": 7.52,
+            "metric14": 7.52,
             "metric15": "-",
             "metric16": "-",
             "metric17": 0.4,
@@ -1359,7 +1360,10 @@ var zoningCached *NYCZoningData
 func NYCZoning() NYCZoningData {
 	if zoningCached == nil {
 		res := NYCZoningData{}
-		json.Unmarshal([]byte(nycZoningJson), &res)
+		e := json.Unmarshal([]byte(nycZoningJson), &res)
+		if e != nil {
+			log.Panic(e)
+		}
 		zoningCached = &res
 	}
 	return *zoningCached
