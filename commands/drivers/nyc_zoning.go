@@ -12,8 +12,14 @@ type NYCZoningMetrics struct {
 	MaximumFARNarrow float64 `json:"metric14"`
 }
 
+type NYCZoningMap struct {
+	Id         string `json:"id"`
+	Equivalent string `json:"equivalent"`
+}
+
 type NYCZoningData struct {
-	Zoning map[string]NYCZoningMetrics `json:"zoning"`
+	Zoning      map[string]NYCZoningMetrics `json:"zoning"`
+	Equivalents map[string]NYCZoningMap     `json:"map"`
 }
 
 var nycZoningJson = `{

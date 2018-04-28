@@ -288,6 +288,8 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 	// Capacity
 	if area > 0 && len(zoning) > 0 {
 		maxCapacity := 0
+		dencityFactor := 0.0
+		far := 0.0
 		zoningData := NYCZoning()
 		for _, z := range zoning {
 			for _, zs := range strings.Split(z, "/") {
@@ -299,6 +301,11 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 				}
 				if normalized == "R6" {
 					normalized = "R6QH"
+				}
+
+				// Equivalent
+				if eq, ok := zoningData.Equivalents[normalized]; ok {
+					normalized = eq.Equivalent
 				}
 
 				// Calculation of capacity
@@ -324,12 +331,22 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 						// Save result
 						if int(capacity) > maxCapacity {
 							maxCapacity = int(capacity)
+							dencityFactor = zd.DensityFactor
+							far = zd.MaximumFARNarrow
 						}
 					}
 				}
 			}
 		}
-		extras.AppendInt("unit_capacity", int32(maxCapacity))
+		if maxCapacity > 0 {
+			extras.AppendInt("unit_capacity", int32(maxCapacity))
+			extras.AppendFloat("dencity_factor", dencityFactor)
+			extras.AppendFloat("far", far)
+		} else {
+			extras.AppendInt("unit_capacity", 0)
+			extras.AppendFloat("dencity_factor", 0)
+			extras.AppendFloat("far", 0)
+		}
 	}
 
 	// Borough
