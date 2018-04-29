@@ -317,10 +317,10 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 
 						// Round down for .74
 						// Round up for .75+
-						if (capacity - float64(int(capacity))) <= 0.74 {
-							capacity = math.Floor(capacity)
-						} else {
+						if (capacity - float64(int(capacity))) >= 0.75 {
 							capacity = math.Ceil(capacity)
+						} else {
+							capacity = math.Floor(capacity)
 						}
 
 						// Additional rule: If area < 1700 sf > max units <= 2
