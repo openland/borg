@@ -58,7 +58,10 @@ func newYorkZoningID(feature *utils.Feature) ([]string, error) {
 	if feature.Properties["ZONEDIST"] == nil {
 		return []string{}, errors.New("Empty ZONEDIST field")
 	}
-	return strings.Split(feature.Properties["ZONEDIST"].(string), "/"), nil
+	baseID := feature.Properties["ZONEDIST"].(string)
+	ids := []string{baseID}
+	ids = append(ids, strings.Split(baseID, "/")...)
+	return ids, nil
 }
 
 func newYorkParcelID(feature *utils.Feature) ([]string, error) {
@@ -428,5 +431,5 @@ func NewYorkParcelsDriver() Driver {
 }
 
 func NewYorkZoningDriver() Driver {
-	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: true}
+	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: false}
 }
