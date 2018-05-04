@@ -57,13 +57,13 @@ func overlay(c *cli.Context) error {
 
 			mainID := row["id"].(string)
 			if displayIds, ok := row["displayId"]; ok {
-				d2 := displayIds.([]string)
+				d2 := displayIds.([]interface{})
 				if len(d2) > 0 {
 					for _, d := range d2 {
-						if ex, ok := zoningDataGeo[d]; ok {
-							zoningDataGeo[d] = ex.Merge(g)
+						if ex, ok := zoningDataGeo[d.(string)]; ok {
+							zoningDataGeo[d.(string)] = ex.Merge(g)
 						} else {
-							zoningDataGeo[d] = g
+							zoningDataGeo[d.(string)] = g
 						}
 					}
 				} else {
