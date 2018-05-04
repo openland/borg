@@ -85,7 +85,7 @@ func cursorGet(c *cli.Context) error {
 
 			// Build diff
 			emoji.Println(":file_cabinet: Diffing datasets")
-			err = doDiff("_processed.ols", "_latest.ols", out)
+			err = doDiff("_processed.ols", "_latest.ols", out, false)
 			if err != nil {
 				return err
 			}

@@ -29,7 +29,7 @@ func writeRecord(writer *bufio.Writer, new map[string]interface{}) error {
 	return nil
 }
 
-func doDiff(src string, updated string, out string) error {
+func doDiff(src string, updated string, out string, ignoreRemoved bool) error {
 	//
 	// Preflight operations
 	//
@@ -65,7 +65,9 @@ func doDiff(src string, updated string, out string) error {
 			// Throw if there are missing record
 			fmt.Println("Record was removed!")
 			fmt.Println(srcLine)
-			return cli.NewExitError("Record was removed!", 1)
+			if !ignoreRemoved {
+				return cli.NewExitError("Record was removed!", 1)
+			}
 		} else if updLine != nil {
 			e = writeRecord(writer, *updLine)
 			if e != nil {
@@ -94,6 +96,7 @@ func diff(c *cli.Context) error {
 	src := c.String("current")
 	updated := c.String("updated")
 	out := c.String("out")
+	ignoreRemoved := c.Bool("ignore-removed")
 	if src == "" {
 		return cli.NewExitError("You should provide current file", 1)
 	}
@@ -104,7 +107,7 @@ func diff(c *cli.Context) error {
 		return cli.NewExitError("You should provide output file", 1)
 	}
 
-	return doDiff(src, updated, out)
+	return doDiff(src, updated, out, ignoreRemoved)
 }
 
 func CreateDiffCommands() []cli.Command {
@@ -124,6 +127,10 @@ func CreateDiffCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "out",
 					Usage: "Path to differenced dataset",
+				},
+				cli.BoolFlag{
+					Name:  "ignore-removed",
+					Usage: "Ignore removed records",
 				},
 			},
 			Action: func(c *cli.Context) error {

@@ -187,3 +187,29 @@ func TestIntersections(t *testing.T) {
 	res := isLineStringInLineString(inner, outer)
 	assert.Equal(t, true, res)
 }
+
+func TestPolyIntersections(t *testing.T) {
+	p := NewSimplePolygon([]Point2D{
+		{0, 0},
+		{0, 1},
+		{1, 1},
+		{1, 0},
+	})
+	p2 := NewSimplePolygon([]Point2D{
+		{0.75, 0.75},
+		{0.75, 1.75},
+		{1.75, 1.75},
+		{1.75, 0.75},
+	})
+	p3 := NewSimplePolygon([]Point2D{
+		{2.75, 2.75},
+		{2.75, 3.75},
+		{3.75, 3.75},
+		{3.75, 2.75},
+	})
+	assert.True(t, p.Intersects(p2))
+	assert.True(t, p2.Intersects(p))
+
+	assert.False(t, p.Intersects(p3))
+	assert.False(t, p3.Intersects(p))
+}
