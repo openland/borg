@@ -58,7 +58,7 @@ func newYorkZoningID(feature *utils.Feature) ([]string, error) {
 	if feature.Properties["ZONEDIST"] == nil {
 		return []string{}, errors.New("Empty ZONEDIST field")
 	}
-	return []string{feature.Properties["ZONEDIST"].(string)}, nil
+	return strings.Split(feature.Properties["ZONEDIST"].(string), "/"), nil
 }
 
 func newYorkParcelID(feature *utils.Feature) ([]string, error) {
@@ -419,14 +419,14 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 
 // NewYorkBlocksDriver driver for NYC blocks datasets
 func NewYorkBlocksDriver() Driver {
-	return Driver{ID: newYorkBlockID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
+	return Driver{ID: newYorkBlockID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: false}
 }
 
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
-	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired}
+	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired, MultipleID: false}
 }
 
 func NewYorkZoningDriver() Driver {
-	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
+	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: true}
 }

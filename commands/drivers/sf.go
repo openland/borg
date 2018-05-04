@@ -35,5 +35,5 @@ func sanFranciscoRetired(feature *utils.Feature) (RetiredType, error) {
 }
 
 func SanFranciscoLotsDriver() Driver {
-	return Driver{ID: sanFranciscoLotsID, Extras: EmptyExtras, Record: sanFranciscoClassifier, Retired: sanFranciscoRetired}
+	return Driver{ID: sanFranciscoLotsID, Extras: EmptyExtras, Record: sanFranciscoClassifier, Retired: sanFranciscoRetired, MultipleID: false}
 }
