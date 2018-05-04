@@ -37,3 +37,14 @@ func (a Polygon2D) Intersects(b Polygon2D) bool {
 
 	return false
 }
+
+func (a Multipolygon2D) Intersects(b Multipolygon2D) bool {
+	for _, ap := range a.Polygons {
+		for _, bp := range b.Polygons {
+			if ap.Intersects(bp) {
+				return true
+			}
+		}
+	}
+	return false
+}

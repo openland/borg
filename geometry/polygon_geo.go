@@ -77,6 +77,31 @@ func (poly PolygonGeo) Bounds() BoundsGeo {
 
 }
 
+func (polygon MultipolygonGeo) Bounds() BoundsGeo {
+	maxLon := -math.MaxFloat64
+	minLon := math.MaxFloat64
+	maxLat := -math.MaxFloat64
+	minLat := math.MaxFloat64
+
+	for _, p := range polygon.Polygons {
+		b := p.Bounds()
+		if b.MaxLatitude > maxLat {
+			maxLat = b.MaxLatitude
+		}
+		if b.MaxLongitude > maxLon {
+			maxLon = b.MaxLongitude
+		}
+		if b.MinLatitude < minLat {
+			minLat = b.MinLatitude
+		}
+		if b.MinLongitude < minLon {
+			minLon = b.MinLongitude
+		}
+	}
+
+	return BoundsGeo{MinLatitude: minLat, MinLongitude: minLon, MaxLatitude: maxLat, MaxLongitude: maxLon}
+}
+
 // Center is a calculation of a center of MultiPolygon
 func (polygon MultipolygonGeo) Center() PointGeo {
 	count := 0
@@ -90,6 +115,17 @@ func (polygon MultipolygonGeo) Center() PointGeo {
 		}
 	}
 	return PointGeo{Latitude: latitudeS / float64(count), Longitude: longitudeS / float64(count)}
+}
+
+func (polygon MultipolygonGeo) Merge(dest MultipolygonGeo) MultipolygonGeo {
+	polys := make([]PolygonGeo, 0)
+	for _, p := range polygon.Polygons {
+		polys = append(polys, p)
+	}
+	for _, p := range dest.Polygons {
+		polys = append(polys, p)
+	}
+	return MultipolygonGeo{Polygons: polys}
 }
 
 //
