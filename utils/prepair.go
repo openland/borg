@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -14,7 +16,20 @@ func invokeRepair(src string) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	command := exec.Command("prepair", "--wkt", src)
+	f, e := ioutil.TempFile(".", "pr")
+	if e != nil {
+		return "", e
+	}
+	defer os.Remove(f.Name())
+	_, e = f.WriteString(src)
+	if e != nil {
+		return "", e
+	}
+	e = f.Close()
+	if e != nil {
+		return "", e
+	}
+	command := exec.Command("prepair", "-f", f.Name())
 	var out bytes.Buffer
 	command.Stdout = &out
 	err := command.Run()
