@@ -35,7 +35,7 @@ func CreateNormalizeCommands() []cli.Command {
 				{
 					Name: "ols",
 					Flags: []cli.Flag{
-						cli.StringSliceFlag{
+						cli.StringFlag{
 							Name:  "source, src",
 							Usage: "Path to dataset",
 						},
