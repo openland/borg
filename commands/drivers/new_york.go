@@ -54,6 +54,13 @@ func newYorkRecordType(feature *utils.Feature) (RecordType, error) {
 	return Primary, nil
 }
 
+func newYorkZoningID(feature *utils.Feature) ([]string, error) {
+	if feature.Properties["ZONEDIST"] == nil {
+		return []string{}, errors.New("Empty ZONEDIST field")
+	}
+	return []string{feature.Properties["ZONEDIST"].(string)}, nil
+}
+
 func newYorkParcelID(feature *utils.Feature) ([]string, error) {
 
 	// Checking fields
@@ -418,4 +425,8 @@ func NewYorkBlocksDriver() Driver {
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
 	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired}
+}
+
+func NewYorkZoningDriver() Driver {
+	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
 }
