@@ -8,7 +8,7 @@ import (
 	"github.com/statecrafthq/borg/geometry"
 	"github.com/statecrafthq/borg/utils"
 	"github.com/urfave/cli"
-	"gopkg.in/kyokomi/emoji.v1"
+	emoji "gopkg.in/kyokomi/emoji.v1"
 )
 
 func analyzeDataset(c *cli.Context) error {

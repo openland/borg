@@ -12,7 +12,7 @@ import (
 
 	"github.com/statecrafthq/borg/utils"
 	"github.com/urfave/cli"
-	"gopkg.in/cheggaaa/pb.v1"
+	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
 func builtInQueries() map[string]string {

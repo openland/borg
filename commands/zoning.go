@@ -127,8 +127,8 @@ func overlay(c *cli.Context) error {
 				}
 			}
 		}
-
 		extras.AppendEnum("zoning", zkeys)
+		row["extras"] = extras
 
 		return row, nil
 	})
