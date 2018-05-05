@@ -119,7 +119,6 @@ func overlay(c *cli.Context) error {
 		zkeys := make([]string, 0)
 		if g, ok := row["geometry"]; ok {
 			multipoly := geometry.NewGeoMultipolygon(utils.ParseFloat4(g.([]interface{})))
-			proj := geometry.NewProjection(multipoly.Center())
 			projected := multipoly.Project(proj)
 			for k, v := range zoningData {
 				if projected.Intersects(v) {
