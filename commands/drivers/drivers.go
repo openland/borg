@@ -57,11 +57,10 @@ const (
 
 // Driver handles all configuration for specific driver
 type Driver struct {
-	ID         IDFunction
-	Extras     ExtrasFunction
-	Record     RecordFunction
-	Retired    RetiredFunction
-	MultipleID bool
+	ID      IDFunction
+	Extras  ExtrasFunction
+	Record  RecordFunction
+	Retired RetiredFunction
 }
 
 // Drivers provides all available drivers

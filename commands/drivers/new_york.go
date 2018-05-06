@@ -422,14 +422,14 @@ func newYorkParcelExtras(feature *utils.Feature, extras *ops.Extras) error {
 
 // NewYorkBlocksDriver driver for NYC blocks datasets
 func NewYorkBlocksDriver() Driver {
-	return Driver{ID: newYorkBlockID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: false}
+	return Driver{ID: newYorkBlockID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
 }
 
 // NewYorkParcelsDriver driver for NYC parcels datasets
 func NewYorkParcelsDriver() Driver {
-	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired, MultipleID: false}
+	return Driver{ID: newYorkParcelID, Extras: newYorkParcelExtras, Record: newYorkRecordType, Retired: NoRetired}
 }
 
 func NewYorkZoningDriver() Driver {
-	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired, MultipleID: false}
+	return Driver{ID: newYorkZoningID, Extras: EmptyExtras, Record: IgnoreWithoutGeometry, Retired: NoRetired}
 }

@@ -139,21 +139,10 @@ func converGeoJson(c *cli.Context) error {
 			return err
 		}
 
-		// If multiple ID data source - handle just like separate ids
-		if driver.MultipleID {
-			for _, id := range idValue {
-				if val, ok := featureCounts[id]; ok {
-					featureCounts[id] = val + 1
-				} else {
-					featureCounts[id] = 1
-				}
-			}
+		if val, ok := featureCounts[idValue[0]]; ok {
+			featureCounts[idValue[0]] = val + 1
 		} else {
-			if val, ok := featureCounts[idValue[0]]; ok {
-				featureCounts[idValue[0]] = val + 1
-			} else {
-				featureCounts[idValue[0]] = 1
-			}
+			featureCounts[idValue[0]] = 1
 		}
 
 		return nil
@@ -184,6 +173,40 @@ func converGeoJson(c *cli.Context) error {
 			return err
 		}
 
+		//
+		// DANGER! This block need to be executed BEFORE geometry decoding since it can crash
+		//
+
+		// Loading ID
+		idValue, err := driver.ID(feature)
+		if err != nil {
+			return err
+		}
+
+		// Iterate over all IDs
+		primaryID := idValue[0]
+
+		// Check if present on counters
+		var totlaCount int32
+		if val, ok := featureCounts[primaryID]; ok {
+			totlaCount = val
+		} else {
+			return errors.New("Internal inconsistency")
+		}
+
+		// Check how many features for this ID is already processed
+		var currentCount int32
+		if val, ok := pendingFeaturesCount[primaryID]; ok {
+			currentCount = val + 1
+		} else {
+			currentCount = 1
+		}
+		pendingFeaturesCount[primaryID] = currentCount
+
+		//
+		// END DANGER!
+		//
+
 		// Parsing Coordinates
 		// Ignore if geometry missing
 		var coordinates [][][][]float64
@@ -210,106 +233,80 @@ func converGeoJson(c *cli.Context) error {
 			}
 		}
 
-		// Loading ID
-		idValue, err := driver.ID(feature)
+		//
+		// Merging Geometry
+		//
+
+		currentCoordinates := make([][][][]float64, 0)
+		if val, ok := pendingFeatures[primaryID]; ok {
+			currentCoordinates = val
+		}
+
+		// Check if we are reached end for specific feature
+		isLast := currentCount >= totlaCount
+
+		// Update pending if is not last and delete from memory ASAP
+		if !isLast {
+			// Save pending geometry only for primary records
+			if recordType == drivers.Primary {
+				pendingFeatures[primaryID] = currentCoordinates
+			}
+			return nil
+		}
+		delete(pendingFeatures, primaryID)
+		delete(pendingFeaturesCount, primaryID)
+
+		// Merge geometry only for primary records
+		if recordType == drivers.Primary && feature.Geometry != nil {
+			for _, poly := range coordinates {
+				currentCoordinates = append(currentCoordinates, poly)
+			}
+		}
+
+		// Loading Extras
+		extras := ops.NewExtras()
+		err = driver.Extras(feature, &extras)
 		if err != nil {
 			return err
 		}
 
-		// Iterate over all IDs
-		primaryIDs := []string{idValue[0]}
-		if driver.MultipleID {
-			primaryIDs = idValue
+		// Preparing Bundle
+		fields := make(map[string]interface{})
+		fields["id"] = primaryID
+		if len(idValue) > 1 {
+			fields["displayId"] = idValue[1:]
 		}
-		for _, primaryID := range primaryIDs {
-			// Check if present on counters
-			var totlaCount int32
-			if val, ok := featureCounts[primaryID]; ok {
-				totlaCount = val
+		if len(currentCoordinates) > 0 {
+			fields["geometry"] = currentCoordinates
+			extras.AppendFloat("area", geometry.NewGeoMultipolygon(currentCoordinates).Area())
+		}
+		if retiredType != drivers.Unkwnon {
+			if retiredType == drivers.Retired {
+				fields["retired"] = true
 			} else {
-				return errors.New("Internal inconsistency")
+				fields["retired"] = false
 			}
+		}
+		fields["extras"] = extras
 
-			// Check how many features for this ID is already processed
-			var currentCount int32
-			if val, ok := pendingFeaturesCount[primaryID]; ok {
-				currentCount = val + 1
-			} else {
-				currentCount = 1
-			}
-			pendingFeaturesCount[primaryID] = currentCount
-
-			// Check if we are reached end for specific feature
-			isLast := currentCount >= totlaCount
-
-			//
-			// Merging Geometry
-			//
-
-			currentCoordinates := make([][][][]float64, 0)
-			if val, ok := pendingFeatures[primaryID]; ok {
-				currentCoordinates = val
-			}
-
-			// Merge geometry only for primary records
-			if recordType == drivers.Primary && feature.Geometry != nil {
-				for _, poly := range coordinates {
-					currentCoordinates = append(currentCoordinates, poly)
-				}
-			}
-
-			// Update pending if is not last and delete from memory ASAP
-			if !isLast {
-				// Save pending geometry only for primary records
-				if recordType == drivers.Primary {
-					pendingFeatures[primaryID] = currentCoordinates
-				}
-				return nil
-			}
-			delete(pendingFeatures, primaryID)
-			delete(pendingFeaturesCount, primaryID)
-
-			// Loading Extras
-			extras := ops.NewExtras()
-			err = driver.Extras(feature, &extras)
-			if err != nil {
-				return err
-			}
-
-			// Preparing Bundle
-			fields := make(map[string]interface{})
-			fields["id"] = primaryID
-			if len(idValue) > 1 {
-				fields["displayId"] = idValue[1:]
-			}
-			if len(currentCoordinates) > 0 {
-				fields["geometry"] = currentCoordinates
-				extras.AppendFloat("area", geometry.NewGeoMultipolygon(currentCoordinates).Area())
-			}
-			if retiredType != drivers.Unkwnon {
-				if retiredType == drivers.Retired {
-					fields["retired"] = true
-				} else {
-					fields["retired"] = false
-				}
-			}
-			fields["extras"] = extras
-
-			// Writing
-			marshaled, err := json.Marshal(fields)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(w, string(marshaled))
-			if err != nil {
-				return err
-			}
+		// Writing
+		marshaled, err := json.Marshal(fields)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintln(w, string(marshaled))
+		if err != nil {
+			return err
 		}
 
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+
+	if len(pendingFeaturesCount) > 0 {
+		return errors.New("Internal inconsistency")
 	}
 
 	return w.Flush()
