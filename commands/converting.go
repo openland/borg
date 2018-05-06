@@ -245,6 +245,13 @@ func converGeoJson(c *cli.Context) error {
 		// Check if we are reached end for specific feature
 		isLast := currentCount >= totlaCount
 
+		// Merge geometry only for primary records
+		if recordType == drivers.Primary && feature.Geometry != nil {
+			for _, poly := range coordinates {
+				currentCoordinates = append(currentCoordinates, poly)
+			}
+		}
+
 		// Update pending if is not last and delete from memory ASAP
 		if !isLast {
 			// Save pending geometry only for primary records
@@ -255,13 +262,6 @@ func converGeoJson(c *cli.Context) error {
 		}
 		delete(pendingFeatures, primaryID)
 		delete(pendingFeaturesCount, primaryID)
-
-		// Merge geometry only for primary records
-		if recordType == drivers.Primary && feature.Geometry != nil {
-			for _, poly := range coordinates {
-				currentCoordinates = append(currentCoordinates, poly)
-			}
-		}
 
 		// Loading Extras
 		extras := ops.NewExtras()
