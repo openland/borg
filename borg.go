@@ -38,6 +38,7 @@ func main() {
 	app.Commands = append(app.Commands, commands.CreateCursorCommands()...)
 	app.Commands = append(app.Commands, commands.CreateNormalizeCommands()...)
 	app.Commands = append(app.Commands, commands.CreateZoningCommands()...)
+	app.Commands = append(app.Commands, commands.CreateExportCommands()...)
 
 	//
 	// Starting
