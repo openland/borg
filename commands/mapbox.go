@@ -106,12 +106,12 @@ func doMapboxUpload(c *cli.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.Status != "200 OK" {
+	if resp.Status != "201 Created" {
 		log.Println("Mapbox response Status:", resp.Status)
 		log.Println("Mapbox response Headers:", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		log.Println("Mapbox response Body:", string(body))
-		return cli.NewExitError("Unable to retreive upload credentials", 1)
+		return cli.NewExitError("Unable to retreive commit upload", 1)
 	}
 
 	// curl -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache" -d '{
