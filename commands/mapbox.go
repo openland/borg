@@ -22,8 +22,12 @@ func doMapboxUpload(c *cli.Context) error {
 	user := c.String("user")
 	src := c.String("src")
 	tileset := c.String("tileset")
+	name := c.String("name")
 	if token == "" {
 		return cli.NewExitError("You should provide token", 1)
+	}
+	if name == "" {
+		return cli.NewExitError("You should provide name", 1)
 	}
 	if user == "" {
 		return cli.NewExitError("You should provide user", 1)
@@ -98,7 +102,7 @@ func doMapboxUpload(c *cli.Context) error {
 	}
 
 	emoji.Println(":hammer: Commit changes")
-	content := "{\"url\": \"http://" + bucket + ".s3.amazonaws.com/" + key + "\",\"tileset\": \"" + user + "." + tileset + "\"}"
+	content := "{\"url\": \"http://" + bucket + ".s3.amazonaws.com/" + key + "\",\"tileset\": \"" + user + "." + tileset + "\",\"name\":\"" + name + "\"}"
 	req, err = http.NewRequest("POST", "https://api.mapbox.com/uploads/v1/"+user+"?access_token="+token, bytes.NewBuffer([]byte(content)))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err = client.Do(req)
@@ -146,6 +150,10 @@ func CreateMapboxCommands() []cli.Command {
 						},
 						cli.StringFlag{
 							Name:  "tileset",
+							Usage: "Tileset key",
+						},
+						cli.StringFlag{
+							Name:  "name",
 							Usage: "Tileset name",
 						},
 					},
