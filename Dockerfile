@@ -14,7 +14,8 @@ RUN go get \
     cloud.google.com/go/storage \
     golang.org/x/sync/semaphore \
     github.com/stretchr/testify \
-    github.com/umahmood/haversine
+    github.com/umahmood/haversine \
+    github.com/aws/aws-sdk-go/aws/..
 
 # Building Go
 RUN cd /root/.go/src/github.com/statecrafthq/borg/ && go test ./... && go build && mv borg /usr/bin/

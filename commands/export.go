@@ -44,7 +44,7 @@ func doExportParcels(c *cli.Context) error {
 
 	// Body
 	isFirst := true
-	err = ops.RecordReader(src, func(a map[string]interface{}) error {
+	err = ops.RecordReader(src, func(row map[string]interface{}) error {
 		if isFirst {
 			isFirst = false
 		} else {
@@ -58,14 +58,14 @@ func doExportParcels(c *cli.Context) error {
 
 		// Properties
 		record = record + ", \"properties\": {"
-		record = record + "\"id\":\"" + a["id"].(string) + "\""
+		record = record + "\"id\":\"" + row["id"].(string) + "\""
 		record = record + "}"
 
 		// Geomertry
 		record = record + ", \"geometry\": {"
 		record = record + "\"type\":\"MultiPolygon\""
 		record = record + ",\"coordinates\":"
-		g, err := json.Marshal(a["geometry"])
+		g, err := json.Marshal(row["geometry"])
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func CreateExportCommands() []cli.Command {
 			Usage: "Export Dataset",
 			Subcommands: []cli.Command{
 				{
-					Name: "parcels",
+					Name: "geometry",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "source, src",

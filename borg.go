@@ -39,6 +39,7 @@ func main() {
 	app.Commands = append(app.Commands, commands.CreateNormalizeCommands()...)
 	app.Commands = append(app.Commands, commands.CreateZoningCommands()...)
 	app.Commands = append(app.Commands, commands.CreateExportCommands()...)
+	app.Commands = append(app.Commands, commands.CreateMapboxCommands()...)
 
 	//
 	// Starting
