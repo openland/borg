@@ -88,9 +88,10 @@ func doMapboxUpload(c *cli.Context) error {
 	sess := session.New(&conf)
 	svc := s3manager.NewUploader(sess)
 	_, err = svc.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   file,
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String("application/vnd.geo+json"),
+		Body:        file,
 	})
 	if err != nil {
 		return err
@@ -100,7 +101,6 @@ func doMapboxUpload(c *cli.Context) error {
 	content := "{\"url\": \"http://" + bucket + ".s3.amazonaws.com/" + key + "\",\"tileset\": \"" + user + "." + tileset + "\"}"
 	req, err = http.NewRequest("POST", "https://api.mapbox.com/uploads/v1/"+user+"?access_token="+token, bytes.NewBuffer([]byte(content)))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Cache-Control", "no-cache")
 	resp, err = client.Do(req)
 	if err != nil {
 		return err
@@ -121,6 +121,7 @@ func doMapboxUpload(c *cli.Context) error {
 
 	return nil
 }
+
 func CreateMapboxCommands() []cli.Command {
 	return []cli.Command{
 		cli.Command{

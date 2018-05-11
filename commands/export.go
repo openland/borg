@@ -19,6 +19,7 @@ func doExportParcels(c *cli.Context) error {
 	if dst == "" {
 		return cli.NewExitError("You should provide destination file", 1)
 	}
+	exportRetired := c.Bool("export-retired")
 
 	//
 	// Tear Up
@@ -45,6 +46,16 @@ func doExportParcels(c *cli.Context) error {
 	// Body
 	isFirst := true
 	err = ops.RecordReader(src, func(row map[string]interface{}) error {
+
+		// Check retired
+		if !exportRetired {
+			if ret, ok := row["retired"]; ok {
+				if ret.(bool) {
+					return nil
+				}
+			}
+		}
+
 		if isFirst {
 			isFirst = false
 		} else {
@@ -120,6 +131,10 @@ func CreateExportCommands() []cli.Command {
 						cli.BoolFlag{
 							Name:  "force, f",
 							Usage: "Overwrite file if exists",
+						},
+						cli.BoolFlag{
+							Name:  "export-retired",
+							Usage: "Export retired records too",
 						},
 					},
 					Action: func(c *cli.Context) error {
