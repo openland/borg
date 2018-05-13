@@ -3,7 +3,10 @@ package commands
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
+
+	"github.com/statecrafthq/borg/geometry"
 
 	"github.com/statecrafthq/borg/commands/ops"
 	"github.com/statecrafthq/borg/utils"
@@ -70,12 +73,18 @@ func doExportParcels(c *cli.Context) error {
 		// Properties
 		record = record + ", \"properties\": {"
 		record = record + "\"id\":\"" + row["id"].(string) + "\""
+		bounds := geometry.NewGeoMultipolygon(utils.ParseFloat4(row["geometry"].([]interface{}))).Bounds()
+		record = record + ",\"max_lat\":" + fmt.Sprintf("%f", bounds.MaxLatitude)
+		record = record + ",\"max_lon\":" + fmt.Sprintf("%f", bounds.MaxLongitude)
+		record = record + ",\"min_lat\":" + fmt.Sprintf("%f", bounds.MinLatitude)
+		record = record + ",\"min_lon\":" + fmt.Sprintf("%f", bounds.MinLongitude)
 		record = record + "}"
 
 		// Geomertry
 		record = record + ", \"geometry\": {"
 		record = record + "\"type\":\"MultiPolygon\""
 		record = record + ",\"coordinates\":"
+
 		g, err := json.Marshal(row["geometry"])
 		if err != nil {
 			return err
