@@ -70,5 +70,6 @@ func Drivers() map[string]Driver {
 	res["nyc_parcels"] = NewYorkParcelsDriver()
 	res["nyc_zoning"] = NewYorkZoningDriver()
 	res["sf_lots"] = SanFranciscoLotsDriver()
+	res["sf_blocks"] = SanFranciscoBlocksDriver()
 	return res
 }

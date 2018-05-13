@@ -11,6 +11,12 @@ func sanFranciscoLotsID(feature *utils.Feature) ([]string, error) {
 	return []string{feature.Properties["mapblklot"].(string)}, nil
 }
 
+func sanFranciscoBlocksID(feature *utils.Feature) ([]string, error) {
+	return []string{feature.Properties["block_num"].(string)}, nil
+}
+
+//block_num
+
 func sanFranciscoClassifier(feature *utils.Feature) (RecordType, error) {
 	// Just for now ignore everything without geometry
 	if feature.Geometry == nil {
@@ -36,4 +42,8 @@ func sanFranciscoRetired(feature *utils.Feature) (RetiredType, error) {
 
 func SanFranciscoLotsDriver() Driver {
 	return Driver{ID: sanFranciscoLotsID, Extras: EmptyExtras, Record: sanFranciscoClassifier, Retired: sanFranciscoRetired}
+}
+
+func SanFranciscoBlocksDriver() Driver {
+	return Driver{ID: sanFranciscoBlocksID, Extras: EmptyExtras, Record: DefaultRecord, Retired: NoRetired}
 }
