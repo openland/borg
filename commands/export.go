@@ -16,6 +16,7 @@ import (
 func doExportParcels(c *cli.Context) error {
 	src := c.String("src")
 	dst := c.String("dst")
+	city := c.String("city")
 	if src == "" {
 		return cli.NewExitError("You should provide source file", 1)
 	}
@@ -72,7 +73,11 @@ func doExportParcels(c *cli.Context) error {
 
 		// Properties
 		record = record + ", \"properties\": {"
-		record = record + "\"id\":\"" + row["id"].(string) + "\""
+		if city != "" {
+			record = record + "\"id\":\"" + city + "_" + row["id"].(string) + "\""
+		} else {
+			record = record + "\"id\":\"" + row["id"].(string) + "\""
+		}
 		bounds := geometry.NewGeoMultipolygon(utils.ParseFloat4(row["geometry"].([]interface{}))).Bounds()
 		record = record + ",\"max_lat\":" + fmt.Sprintf("%f", bounds.MaxLatitude)
 		record = record + ",\"max_lon\":" + fmt.Sprintf("%f", bounds.MaxLongitude)
@@ -136,6 +141,10 @@ func CreateExportCommands() []cli.Command {
 						cli.StringFlag{
 							Name:  "dest, dst",
 							Usage: "Path to destination file",
+						},
+						cli.StringFlag{
+							Name:  "city",
+							Usage: "City tag for this geometry",
 						},
 						cli.BoolFlag{
 							Name:  "force, f",
