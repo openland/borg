@@ -1,18 +1,20 @@
 package drivers
 
 import (
+	"strings"
+
 	"github.com/statecrafthq/borg/utils"
 )
 
 func sanFranciscoLotsID(feature *utils.Feature) ([]string, error) {
 	if feature.Properties["blklot"] != feature.Properties["mapblklot"] {
-		return []string{feature.Properties["mapblklot"].(string), feature.Properties["blklot"].(string)}, nil
+		return []string{strings.TrimLeft(feature.Properties["mapblklot"].(string), "0"), strings.TrimLeft(feature.Properties["blklot"].(string), "0")}, nil
 	}
-	return []string{feature.Properties["mapblklot"].(string)}, nil
+	return []string{strings.TrimLeft(feature.Properties["mapblklot"].(string), "0")}, nil
 }
 
 func sanFranciscoBlocksID(feature *utils.Feature) ([]string, error) {
-	return []string{feature.Properties["block_num"].(string)}, nil
+	return []string{strings.TrimLeft(feature.Properties["block_num"].(string), "0")}, nil
 }
 
 //block_num
